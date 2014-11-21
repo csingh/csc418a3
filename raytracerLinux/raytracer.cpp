@@ -222,8 +222,9 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	// Don't bother shading if the ray didn't hit 
 	// anything.
 	if (!ray.intersection.none) {
-		computeShading(ray); 
-		col = ray.col;  
+		//computeShading(ray); 
+		//col = ray.col;
+		col = Colour(1, 0, 0);  
 		count++;
 	}
 
@@ -266,16 +267,13 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			// TODO: Convert ray to world space and call 
 			// shadeRay(ray) to generate pixel colour. 	
 			
-			Point3D q(imagePlane[0], imagePlane[1], imagePlane[2]);
-			q = viewToWorld * q;
+			origin = viewToWorld * origin;
+			Vector3D dir(imagePlane[0], imagePlane[1], imagePlane[2]);
+			dir = viewToWorld * dir;
+			dir.normalize();
 
-			Vector3D dir = q - eye;
-			float mag = sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
-			dir = (1/mag) * dir;
-
-			Ray3D ray(q, dir);
-
-			Colour col = shadeRay(ray); 
+			Ray3D ray(origin, dir);
+			Colour col = shadeRay(ray);
 
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);

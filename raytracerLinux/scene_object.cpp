@@ -26,6 +26,42 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
 
+	// Followed pseudo-code from old tutorial notes here:
+	// https://csc.cdf.toronto.edu/mybb/showthread.php?tid=8668
+
+	// transform ray to model space
+	ray.origin = worldToModel * ray.origin;
+	ray.dir = worldToModel * ray.dir;
+
+	// intersection position
+	double t = -ray.origin[2] / ray.dir[2];
+
+	// intersection must be in front of camera
+	if (t <= 0) {
+		return false;
+	}
+
+	// x/y values for intersection on xy-plane
+	double x = ray.origin[0] + t*ray.dir[0];
+	double y = ray.origin[1] + t*ray.dir[1];
+	Point3D p(x, y, 0);
+
+	// make sure intersection on xy-plane is in the defined shape
+	if (x >= -0.5 && x <= 0.5 && y >= -0.5 && y <= 0.5) {
+		// update if ray has no intersection, or
+		// this intersection is closer to camera
+		if (ray.intersection.none || t < ray.intersection.t_value) {
+			ray.intersection.t_value = t;
+			ray.intersection.point = modelToWorld * p;
+			Vector3D normal(0, 0, 1);
+			normal = modelToWorld.transpose() * normal;
+			normal.normalize();
+			ray.intersection.normal = normal;
+			ray.intersection.none = false;
+			return true;
+		}
+	}
+
 	return false;
 }
 

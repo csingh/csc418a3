@@ -16,6 +16,7 @@
 #include <cmath>
 #include <iostream>
 #include <cstdlib>
+#include <stdio.h>
 
 Raytracer::Raytracer() : _lightSource(NULL) {
 	_root = new SceneDagNode();
@@ -223,7 +224,10 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	if (!ray.intersection.none) {
 		computeShading(ray); 
 		col = ray.col;  
+		count++;
 	}
+
+	total++;
 
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.  
@@ -241,6 +245,8 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 	initPixelBuffer();
 	viewToWorld = initInvViewMatrix(eye, view, up);
 
+	float min_x = 0, max_x = 0, min_y = 0, max_y = 0;
+
 	// Construct a ray for each pixel.
 	for (int i = 0; i < _scrHeight; i++) {
 		for (int j = 0; j < _scrWidth; j++) {
@@ -252,10 +258,22 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			imagePlane[1] = (-double(height)/2 + 0.5 + i)/factor;
 			imagePlane[2] = -1;
 
+			min_x = ( imagePlane[0] < min_x ) ? imagePlane[0] : min_x;
+			max_x = ( imagePlane[0] > max_x ) ? imagePlane[0] : max_x;
+			min_y = ( imagePlane[1] < min_y ) ? imagePlane[1] : min_y;
+			max_y = ( imagePlane[1] > max_y ) ? imagePlane[1] : max_y;
+
 			// TODO: Convert ray to world space and call 
 			// shadeRay(ray) to generate pixel colour. 	
 			
-			Ray3D ray;
+			Point3D q(imagePlane[0], imagePlane[1], imagePlane[2]);
+			q = viewToWorld * q;
+
+			Vector3D dir = q - eye;
+			float mag = sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
+			dir = (1/mag) * dir;
+
+			Ray3D ray(q, dir);
 
 			Colour col = shadeRay(ray); 
 
@@ -264,6 +282,9 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			_bbuffer[i*width+j] = int(col[2]*255);
 		}
 	}
+
+	printf("%0.2f %0.2f %0.2f %0.2f\n", min_x, max_x, min_y, max_y);
+	printf("hit count: %d/%d\n", count, total);
 
 	flushPixelBuffer(fileName);
 }

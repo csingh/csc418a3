@@ -15,6 +15,9 @@
 #include "scene_object.h"
 #include "light_source.h"
 
+int count = 0;
+int total = 0;
+
 // Linked list containing light sources in the scene.
 struct LightListNode {
 	LightListNode() : light(NULL), next(NULL) {}

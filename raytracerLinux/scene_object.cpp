@@ -79,28 +79,20 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
 
-	// sphere vars
-	Point3D sphere_center(0, 0, 0);
-	double sphere_r = 1; //radius
-
 	// transform ray to model space
-	ray.origin = worldToModel * ray.origin;
-	ray.dir = worldToModel * ray.dir;
+	Point3D o = worldToModel * ray.origin;
+	Vector3D origin(o[0], o[1], o[2]);
+	Vector3D dir = worldToModel * ray.dir;
+	dir.normalize();
 
 	// algorithm from:
 	// http://stackoverflow.com/questions/6533856/ray-sphere-intersection
+	// https://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter1.htm
 
 	// 2 points on ray
-	double xa = ray.origin[0];
-	double ya = ray.origin[1];
-	double za = ray.origin[2];
-	double xb = ray.origin[0] + ray.dir[0];
-	double yb = ray.origin[1] + ray.dir[1];
-	double zb = ray.origin[2] + ray.dir[2];
-
-	double a = pow(xb-xa,2) + pow(yb-ya,2) + pow(zb-za,2);
-	double b = 2 * ( (xb-xa)*(xa) + (yb-ya)*(ya) + (zb-za)*(za) );
-	double c = pow(xa,2) + pow(ya,2) + pow(za,2) - pow(sphere_r, 2);
+	double a = dir.dot(dir);
+	double b = 2 * ( dir.dot(origin) );
+	double c = origin.dot(origin) - 1;
 
 	double delta = pow(b,2) - 4*a*c;
 
@@ -119,16 +111,19 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			t = (t1 < t2) ? t1 : t2; // pick the closer one
 		}
 
-		double x = xa + t*(xb-xa);
-		double y = ya + t*(yb-ya);
-		double z = za + t*(zb-za);
-		Point3D p(x,y,z);
+		// intersection pt
+		Point3D p = o + (t * dir);
+
+		// surface normal at intersection
+		Vector3D normal(p[0], p[1], p[2]);
+		normal.normalize();
+
 		if (ray.intersection.none || t < ray.intersection.t_value) {
 			ray.intersection.t_value = t;
 			ray.intersection.point = modelToWorld * p;
-			//normal = modelToWorld.transpose() * normal;
-			//normal.normalize();
-			//ray.intersection.normal = normal;
+			normal = modelToWorld.transpose() * normal;
+			normal.normalize();
+			ray.intersection.normal = normal;
 			ray.intersection.none = false;
 			return true;
 		}

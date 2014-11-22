@@ -29,6 +29,9 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// Followed pseudo-code from old tutorial notes here:
 	// https://csc.cdf.toronto.edu/mybb/showthread.php?tid=8668
 
+	// square vars
+	Vector3D normal(0, 0, 1);
+
 	// transform ray to model space
 	ray.origin = worldToModel * ray.origin;
 	ray.dir = worldToModel * ray.dir;
@@ -53,7 +56,6 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		if (ray.intersection.none || t < ray.intersection.t_value) {
 			ray.intersection.t_value = t;
 			ray.intersection.point = modelToWorld * p;
-			Vector3D normal(0, 0, 1);
 			normal = modelToWorld.transpose() * normal;
 			normal.normalize();
 			ray.intersection.normal = normal;
@@ -76,6 +78,61 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	//
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
+
+	// sphere vars
+	Point3D sphere_center(0, 0, 0);
+	double sphere_r = 1; //radius
+
+	// transform ray to model space
+	ray.origin = worldToModel * ray.origin;
+	ray.dir = worldToModel * ray.dir;
+
+	// algorithm from:
+	// http://stackoverflow.com/questions/6533856/ray-sphere-intersection
+
+	// 2 points on ray
+	double xa = ray.origin[0];
+	double ya = ray.origin[1];
+	double za = ray.origin[2];
+	double xb = ray.origin[0] + ray.dir[0];
+	double yb = ray.origin[1] + ray.dir[1];
+	double zb = ray.origin[2] + ray.dir[2];
+
+	double a = pow(xb-xa,2) + pow(yb-ya,2) + pow(zb-za,2);
+	double b = 2 * ( (xb-xa)*(xa) + (yb-ya)*(ya) + (zb-za)*(za) );
+	double c = pow(xa,2) + pow(ya,2) + pow(za,2) - pow(sphere_r, 2);
+
+	double delta = pow(b,2) - 4*a*c;
+
+	if (delta < 0) {
+		// no intersection
+		return false;
+	} else { 
+		double t;
+		if (delta == 0) {
+			// single intersection (ray just touches the sphere)
+			double t = -b / (2*a);
+		} else {
+			// two intersection points (ray passes through sphere)
+			double t1 = (-b - sqrt(delta)) / (2*a);
+			double t2 = (-b + sqrt(delta)) / (2*a);
+			t = (t1 < t2) ? t1 : t2; // pick the closer one
+		}
+
+		double x = xa + t*(xb-xa);
+		double y = ya + t*(yb-ya);
+		double z = za + t*(zb-za);
+		Point3D p(x,y,z);
+		if (ray.intersection.none || t < ray.intersection.t_value) {
+			ray.intersection.t_value = t;
+			ray.intersection.point = modelToWorld * p;
+			//normal = modelToWorld.transpose() * normal;
+			//normal.normalize();
+			//ray.intersection.normal = normal;
+			ray.intersection.none = false;
+			return true;
+		}
+	}
 	
 	return false;
 }

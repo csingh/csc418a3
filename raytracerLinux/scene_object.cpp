@@ -89,7 +89,6 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// http://stackoverflow.com/questions/6533856/ray-sphere-intersection
 	// https://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter1.htm
 
-	// 2 points on ray
 	double a = dir.dot(dir);
 	double b = 2 * ( dir.dot(origin) );
 	double c = origin.dot(origin) - 1;

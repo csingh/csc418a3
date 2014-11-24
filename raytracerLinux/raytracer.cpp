@@ -222,9 +222,9 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	// Don't bother shading if the ray didn't hit 
 	// anything.
 	if (!ray.intersection.none) {
-		//computeShading(ray); 
-		//col = ray.col;
-		col = Colour(1, 0, 0);  
+		computeShading(ray); 
+		col = ray.col;
+		// col = Colour(1, 0, 0);
 		count++;
 	}
 

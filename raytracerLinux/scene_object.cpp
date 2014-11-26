@@ -107,7 +107,12 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			// two intersection points (ray passes through sphere)
 			double t1 = (-b - sqrt(delta)) / (2*a);
 			double t2 = (-b + sqrt(delta)) / (2*a);
-			t = (t1 < t2) ? t1 : t2; // pick the closer one
+			t = fmin(t1, t2); // pick the closer one non-negative one
+
+		}
+
+		if (t<= 0) {
+			return false; 
 		}
 
 		// intersection pt
@@ -119,10 +124,10 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 		if (ray.intersection.none || t < ray.intersection.t_value) {
 			ray.intersection.t_value = t;
-			ray.intersection.point = p; 
-			// ray.intersection.point = modelToWorld * p;
-			// normal = modelToWorld.transpose() * normal;
-			// normal.normalize();
+			// ray.intersection.point = p; 
+			ray.intersection.point = modelToWorld * p;
+			normal = worldToModel.transpose() * normal;
+			normal.normalize();
 			ray.intersection.normal = normal;
 			ray.intersection.none = false;
 			return true;

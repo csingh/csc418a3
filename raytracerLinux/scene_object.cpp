@@ -56,7 +56,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		if (ray.intersection.none || t < ray.intersection.t_value) {
 			ray.intersection.t_value = t;
 			ray.intersection.point = modelToWorld * p;
-			normal = modelToWorld.transpose() * normal;
+			normal = worldToModel.transpose() * normal;
 			normal.normalize();
 			ray.intersection.normal = normal;
 			ray.intersection.none = false;
@@ -124,7 +124,6 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 		if (ray.intersection.none || t < ray.intersection.t_value) {
 			ray.intersection.t_value = t;
-			// ray.intersection.point = p; 
 			ray.intersection.point = modelToWorld * p;
 			normal = worldToModel.transpose() * normal;
 			normal.normalize();
@@ -137,3 +136,68 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	return false;
 }
 
+
+bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+		const Matrix4x4& modelToWorld ) { 
+
+	//algo from https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html
+
+	// transform ray to model space
+	Point3D o = worldToModel * ray.origin;
+	Vector3D origin(o[0], o[1], o[2]);
+	Vector3D dir = worldToModel * ray.dir;
+	dir.normalize();
+
+	double min_z = -0.5; double max_z = 0.5; 
+
+	double a = dir[0]*dir[0] + dir[1]*dir[1];
+	double b = 2*(o[0]*dir[0]+o[1]*dir[1]);
+	double c = o[0]*o[0] + o[1]*o[1] - 1; 
+
+	double d = pow(b,2) - 4*a*c;
+
+	if (d<0) {
+		return false; 
+	}	
+
+	double t1 = (-b - sqrt(d)) / (2*a);
+	double t2 = (-b + sqrt(d)) / (2*a);
+	double t; 
+
+	if (t1 <= 0 && t2 <= 0) {
+		return false; 
+	} else if (t1 <= 0) {
+		t = t2; 
+	} else if (t2 <= 0) {
+		t = t1; 
+	} else {
+		t = fmin(t1, t2); 
+	}
+
+	//check if within range of z
+	double x = o[0] + (t*dir[0]); 
+	double y = o[1] + (t*dir[1]); 
+	double z = o[2] + (t*dir[2]); 
+	if (z>max_z || z<min_z) {
+		return false; 
+	}
+
+	// intersection pt
+	Point3D p(x, y, z);
+
+	// surface normal at intersection
+	Vector3D normal(p[0], p[1], 0);
+	normal.normalize();
+
+	if (ray.intersection.none || t < ray.intersection.t_value) {
+		ray.intersection.t_value = t;
+		ray.intersection.point = modelToWorld * p;
+		normal = worldToModel.transpose() * normal;
+		normal.normalize();
+		ray.intersection.normal = normal;
+		ray.intersection.none = false;
+		return true;
+	}
+
+	return false; 
+}

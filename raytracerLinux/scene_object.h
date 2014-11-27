@@ -34,3 +34,10 @@ public:
 			const Matrix4x4& modelToWorld );
 };
 
+// Cylinder aligned along the z-axis with height 2, centered at origin
+class Cylinder : public SceneObject { 
+	public:
+	bool intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+			const Matrix4x4& modelToWorld );
+};
+

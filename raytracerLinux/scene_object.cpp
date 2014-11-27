@@ -56,7 +56,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		if (ray.intersection.none || t < ray.intersection.t_value) {
 			ray.intersection.t_value = t;
 			ray.intersection.point = modelToWorld * p;
-			normal = modelToWorld.transpose() * normal;
+			normal = worldToModel.transpose() * normal;
 			normal.normalize();
 			ray.intersection.normal = normal;
 			ray.intersection.none = false;

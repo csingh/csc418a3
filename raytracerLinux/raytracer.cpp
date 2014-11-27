@@ -257,19 +257,16 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			double scale = 1.0/(double)n; 
 			Colour col(0, 0, 0); 
 			for (int m = 0; m < n*n; m++) {
-				int x = (int) m / n; 
-				int y = m % n; 
-				// random number between 0 and scale to get random 
-				// x and y in this sub pixel 
+				int y = (int) m / n; 
+				int x = m % n; 
 
+				// to sample a random x and y in this sub pixel 
 				double rand_x = fRand(x*scale, (x+1)*scale);  
 				double rand_y = fRand(y*scale, (y+1)*scale); 
 
-				double x_ = (-double(width)/2 + rand_x + i)/factor;
-				double y_ = (-double(height)/2 + rand_y + j)/factor; 
+				double x_ = (-double(width)/2 + rand_x + j)/factor;
+				double y_ = (-double(height)/2 + rand_y + i)/factor; 
 				
-				// printf("sanity check x y : %f, %f\n", x_, y_);
-
 				// Sets up ray origin and direction in view space, 
 				// image plane is at z = -1.
 				Point3D origin(0, 0, 0);
@@ -286,23 +283,14 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 				Ray3D ray(origin, dir);
 
 				Colour subcol = shadeRay(ray);
-
-				// printf("sanity check subcol: r:%f g:%f b:%f\n", subcol[0], subcol[1], subcol[2]);
-
-				// subcol[0] = int(pow(scale, 2)*subcol[0]*255);
-				// subcol[1] = int(pow(scale, 2)*subcol[1]*255);
-				// subcol[2] = int(pow(scale, 2)*subcol[2]*255); 
-
+				
 				col = col + subcol; 
 			}
-
-			// printf("sanity check col: r:%f g:%f b:%f\n", col[0], col[1], col[2]);
 
 			_rbuffer[i*width+j] = int((col[0]/pow(n,2))*255);
 			_gbuffer[i*width+j] = int((col[1]/pow(n,2))*255);
 			_bbuffer[i*width+j] = int((col[2]/pow(n,2))*255);
-			// printf("sanity check avg'd: r:%d g:%d b:%d\n", _rbuffer[i*width+j], _gbuffer[i*width+j], _bbuffer[i*width+j]);
-
+			
 		}
 	}
 

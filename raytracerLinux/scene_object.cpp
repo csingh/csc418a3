@@ -337,36 +337,22 @@ bool Cone::intersectWall(Point3D o, Vector3D d, double& t){
 bool Cone::intersectCap(Point3D o, Vector3D d, double& t, Vector3D& n) {
 		//check for interesecting caps
 	
-	Vector3D min_normal(0, 0, -1);
+	// Vector3D min_normal(0, 0, -1);
 	Vector3D max_normal(0, 0, 1);
-	double t1 = (MIN_Z - o[2])/d[2];
-	double t2 = (MAX_Z - o[2])/d[2];
+	// double t1 = (MIN_Z - o[2])/d[2];
+	t = (MAX_Z - o[2])/d[2];
 
-	if (t1<=0 && t2 <= 0) {
+	if (t < 0) {
 		return false; 
 	}
-
-	if (t1 <= 0 && t2 <= 0) {
-		return false; 
-	} else if (t1 <= 0 && t2 > 0) {
-		t = t2; 
-	} else if (t2 <=0 && t1 > 0) {
-		t = t1; 
-	} else if (t1 > 0 && t2 > 0) {
-		t = fmin(t1, t2); 
-	} 
 
 	Point3D	i = o + t*d; 
 
 	if (!(i[0]*i[0] + i[1]*i[1] <= i[2]*i[2])) {
 		return false; 
 	}
-	
-	if (t == t1) {
-		n = min_normal;
-	} else {
-		n = max_normal;
-	}
+	n = max_normal;
+
 
 	return true; 
 }

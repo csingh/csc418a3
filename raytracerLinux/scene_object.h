@@ -37,7 +37,19 @@ public:
 // Cylinder aligned along the z-axis with height 2, centered at origin
 class Cylinder : public SceneObject { 
 	public:
+	const static double MIN_Z = -0.5; 
+	const static double MAX_Z = 0.5; 
 	bool intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			const Matrix4x4& modelToWorld );
+
+	// test if intersect top or bottom by passing in 
+	// transformed origin and direction of ray
+	bool intersectCap(Point3D origin, Vector3D direction, double& t, Vector3D& normal); 
+
+	// test if intersect cylinder wall by passing in 
+	// transformed origin and direction of ray
+	bool intersectWall(Point3D origin, Vector3D direction, double& t); 
 };
+
+
 

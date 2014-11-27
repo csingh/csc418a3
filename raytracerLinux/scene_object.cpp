@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include "scene_object.h"
 
 bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
@@ -148,56 +149,122 @@ bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Vector3D dir = worldToModel * ray.dir;
 	dir.normalize();
 
-	double min_z = -0.5; double max_z = 0.5; 
+	// check for cap intersection 
+	double t_cap = std::numeric_limits<double>::max();  
+	Vector3D cap_normal;
+	bool intersectedCap = intersectCap(o, dir, t_cap, cap_normal);
 
-	double a = dir[0]*dir[0] + dir[1]*dir[1];
-	double b = 2*(o[0]*dir[0]+o[1]*dir[1]);
-	double c = o[0]*o[0] + o[1]*o[1] - 1; 
+	// checking for intersection of the sides of the cylinder
 
-	double d = pow(b,2) - 4*a*c;
-
-	if (d<0) {
+	double t_wall = std::numeric_limits<double>::max();  
+	bool intersectedWall = intersectWall(o, dir, t_wall); 
+	
+	double t;
+	if (!intersectedCap && !intersectedWall) {
 		return false; 
-	}	
-
-	double t1 = (-b - sqrt(d)) / (2*a);
-	double t2 = (-b + sqrt(d)) / (2*a);
-	double t; 
-
-	if (t1 <= 0 && t2 <= 0) {
-		return false; 
-	} else if (t1 <= 0) {
-		t = t2; 
-	} else if (t2 <= 0) {
-		t = t1; 
+	} else if (intersectedWall && intersectedCap) {
+		t = fmin(t_wall, t_cap); 
+	} else if (intersectedWall) {
+		t = t_wall;
 	} else {
-		t = fmin(t1, t2); 
-	}
-
-	//check if within range of z
-	double x = o[0] + (t*dir[0]); 
-	double y = o[1] + (t*dir[1]); 
-	double z = o[2] + (t*dir[2]); 
-	if (z>max_z || z<min_z) {
-		return false; 
+		t = t_cap; 
 	}
 
 	// intersection pt
-	Point3D p(x, y, z);
+	Point3D p = o + t*dir;
 
 	// surface normal at intersection
-	Vector3D normal(p[0], p[1], 0);
+	Vector3D wall_normal(p[0], p[1], 0);
+	
+	Vector3D normal; 
+	if (t == t_wall) {
+		normal = wall_normal; 
+	} else {
+		normal = cap_normal; 
+	}
+
 	normal.normalize();
 
 	if (ray.intersection.none || t < ray.intersection.t_value) {
 		ray.intersection.t_value = t;
 		ray.intersection.point = modelToWorld * p;
 		normal = worldToModel.transpose() * normal;
-		normal.normalize();
+
 		ray.intersection.normal = normal;
 		ray.intersection.none = false;
 		return true;
 	}
 
 	return false; 
+}
+
+bool Cylinder::intersectWall(Point3D origin, Vector3D direction, double& t) {
+
+	double a = direction[0]*direction[0] + direction[1]*direction[1];
+	double b = 2*(origin[0]*direction[0] + origin[1]*direction[1]);
+	double c = origin[0]*origin[0] + origin[1]*origin[1] - 1; 
+
+	double d = pow(b,2) - 4*a*c;
+
+	if (d<0) {
+		return false; 
+	}
+
+	double t1 = (-b - sqrt(d)) / (2*a);
+	double t2 = (-b + sqrt(d)) / (2*a);
+	if (t1 <= 0 && t2 <= 0) {
+		return false; 
+	} else if (t1 <= 0 && t2 > 0) {
+		t = t2; 
+	} else if (t2 <=0 && t1 > 0) {
+		t = t1; 
+	} else if (t1 > 0 && t2 > 0) {
+		t = fmin(t1, t2); 
+	} 
+
+	double x = origin[0] + (t*direction[0]); 
+	double y = origin[1] + (t*direction[1]); 
+	double z = origin[2] + (t*direction[2]); 
+	if (z > MAX_Z || z < MIN_Z) {
+		return false; 
+	}
+	return true; 
+}
+
+bool Cylinder::intersectCap(Point3D origin, Vector3D direction, double& t, Vector3D &normal) {
+		//check for interesecting caps
+	
+	Vector3D min_normal(0, 0, -1);
+	Vector3D max_normal(0, 0, 1);
+	double t1 = (MIN_Z - origin[2])/direction[2];
+	double t2 = (MAX_Z - origin[2])/direction[2];
+
+	if (t1<=0 && t2 <= 0) {
+		return false; 
+	}
+
+	if (t1 <= 0 && t2 <= 0) {
+		return false; 
+	} else if (t1 <= 0 && t2 > 0) {
+		t = t2; 
+	} else if (t2 <=0 && t1 > 0) {
+		t = t1; 
+	} else if (t1 > 0 && t2 > 0) {
+		t = fmin(t1, t2); 
+	} 
+
+	double x = origin[0] + t*direction[0]; 
+	double y = origin[1] + t*direction[1]; 
+
+	if (!(x*x + y*y <= 1)) {
+		return false; 
+	}
+	
+	if (t == t1) {
+		normal = min_normal;
+	} else {
+		normal = max_normal;
+	}
+
+	return true; 
 }

@@ -126,6 +126,9 @@ private:
 	// After intersection, calculate the colour of the ray by shading it
 	// with all light sources in the scene.
 	void computeShading( Ray3D& ray );
+
+	// generates a random double between fMin and fMax
+	double fRand(double fMin, double fMax);
 	
 	// Width and height of the viewport.
 	int _scrWidth;

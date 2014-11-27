@@ -246,52 +246,86 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 	initPixelBuffer();
 	viewToWorld = initInvViewMatrix(eye, view, up);
 
-	float min_x = 0, max_x = 0, min_y = 0, max_y = 0;
+	// float min_x = 0, max_x = 0, min_y = 0, max_y = 0;
 
 	// Construct a ray for each pixel.
 	for (int i = 0; i < _scrHeight; i++) {
 		for (int j = 0; j < _scrWidth; j++) {
-			// Sets up ray origin and direction in view space, 
-			// image plane is at z = -1.
-			Point3D origin(0, 0, 0);
-			Point3D imagePlane;
-			imagePlane[0] = (-double(width)/2 + 0.5 + j)/factor;
-			imagePlane[1] = (-double(height)/2 + 0.5 + i)/factor;
-			imagePlane[2] = -1;
 
-			min_x = ( imagePlane[0] < min_x ) ? imagePlane[0] : min_x;
-			max_x = ( imagePlane[0] > max_x ) ? imagePlane[0] : max_x;
-			min_y = ( imagePlane[1] < min_y ) ? imagePlane[1] : min_y;
-			max_y = ( imagePlane[1] > max_y ) ? imagePlane[1] : max_y;
+			// dividing the pixel into n*n subpixels for anti-aliasing
+			int n = 4; 
+			double scale = 1.0/(double)n; 
+			Colour col(0, 0, 0); 
+			for (int m = 0; m < n*n; m++) {
+				int x = (int) m / n; 
+				int y = m % n; 
+				// random number between 0 and scale to get random 
+				// x and y in this sub pixel 
 
-			// TODO: Convert ray to world space and call 
-			// shadeRay(ray) to generate pixel colour. 	
-			
-			origin = viewToWorld * origin;
-			Vector3D dir(imagePlane[0], imagePlane[1], imagePlane[2]);
-			dir = viewToWorld * dir;
-			dir.normalize();
+				double rand_x = fRand(x*scale, (x+1)*scale);  
+				double rand_y = fRand(y*scale, (y+1)*scale); 
 
-			Ray3D ray(origin, dir);
-			Colour col = shadeRay(ray);
+				double x_ = (-double(width)/2 + rand_x + i)/factor;
+				double y_ = (-double(height)/2 + rand_y + j)/factor; 
+				
+				// printf("sanity check x y : %f, %f\n", x_, y_);
 
-			_rbuffer[i*width+j] = int(col[0]*255);
-			_gbuffer[i*width+j] = int(col[1]*255);
-			_bbuffer[i*width+j] = int(col[2]*255);
+				// Sets up ray origin and direction in view space, 
+				// image plane is at z = -1.
+				Point3D origin(0, 0, 0);
+				Point3D imagePlane;
+				imagePlane[0] = x_;
+				imagePlane[1] = y_;
+				imagePlane[2] = -1;
+				
+				origin = viewToWorld * origin;
+				Vector3D dir(imagePlane[0], imagePlane[1], imagePlane[2]);
+				dir = viewToWorld * dir;
+				dir.normalize();
+
+				Ray3D ray(origin, dir);
+
+				Colour subcol = shadeRay(ray);
+
+				// printf("sanity check subcol: r:%f g:%f b:%f\n", subcol[0], subcol[1], subcol[2]);
+
+				// subcol[0] = int(pow(scale, 2)*subcol[0]*255);
+				// subcol[1] = int(pow(scale, 2)*subcol[1]*255);
+				// subcol[2] = int(pow(scale, 2)*subcol[2]*255); 
+
+				col = col + subcol; 
+			}
+
+			// printf("sanity check col: r:%f g:%f b:%f\n", col[0], col[1], col[2]);
+
+			_rbuffer[i*width+j] = int((col[0]/pow(n,2))*255);
+			_gbuffer[i*width+j] = int((col[1]/pow(n,2))*255);
+			_bbuffer[i*width+j] = int((col[2]/pow(n,2))*255);
+			// printf("sanity check avg'd: r:%d g:%d b:%d\n", _rbuffer[i*width+j], _gbuffer[i*width+j], _bbuffer[i*width+j]);
+
 		}
 	}
 
-	printf("%0.2f %0.2f %0.2f %0.2f\n", min_x, max_x, min_y, max_y);
+	// printf("%0.2f %0.2f %0.2f %0.2f\n", min_x, max_x, min_y, max_y);
 	printf("hit count: %d/%d\n", count, total);
 
 	flushPixelBuffer(fileName);
 }
 
+double Raytracer::fRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
+
 int main(int argc, char* argv[])
 {	
+	//setting up the randomizer
+	srand((unsigned)time(NULL));
+
 	// Build your scene and setup your camera here, by calling 
 	// functions from Raytracer.  The code here sets up an example
-	// scene and renders it from two different view points, DO NOT
+	// scene and renders it frm two different view points, DO NOT
 	// change this if you're just implementing part one of the 
 	// assignment.  
 	Raytracer raytracer;

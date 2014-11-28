@@ -145,3 +145,5 @@ private:
 	Matrix4x4 _modelToWorld;
 	Matrix4x4 _worldToModel;
 };
+
+static inline void loadBar(int x, int n, int r, int w, bool firstCall);

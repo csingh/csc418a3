@@ -286,6 +286,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 
 	// float min_x = 0, max_x = 0, min_y = 0, max_y = 0;
 
+	bool firstCall = true;
 	// Construct a ray for each pixel.
 	for (int i = 0; i < _scrHeight; i++) {
 		for (int j = 0; j < _scrWidth; j++) {
@@ -330,6 +331,11 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			_bbuffer[i*width+j] = int((col[2]/pow(n,2))*255);
 			
 		}
+
+		loadBar(i, _scrHeight, 50, 50, firstCall);
+
+		if (i == 0) firstCall = false;
+
 	}
 
 	flushPixelBuffer(fileName);
@@ -415,15 +421,52 @@ int main(int argc, char* argv[])
 
 	// Render the scene, feel free to make the image smaller for
 	// testing purposes.	
-	printf("Rendering image 1.\n");
+	printf("Rendering image 1...");
 	raytracer.render(width, height, eye, view, up, fov, "view1.bmp");
 	
 	// Render it from a different point of view.
 	Point3D eye2(4, 2, 1);
 	Vector3D view2(-4, -2, -6);
-	printf("Rendering image 2.\n");
+	printf("Rendering image 2...");
 	raytracer.render(width, height, eye2, view2, up, fov, "view2.bmp");
 
 	return 0;
+}
+
+// from: https://www.ross.click/2011/02/creating-a-progress-bar-in-c-or-any-other-console-app/
+// Process has done i out of n rounds,
+// and we want a bar of width w and resolution r.
+static inline void loadBar(int x, int n, int r, int w, bool firstCall)
+{
+
+	//Make sure that load bar is displayed on next line and don’t delete current console line during first run
+	if (firstCall)
+	{
+	    std::cout << std::endl;
+	    firstCall = false;
+	}
+
+    // Only update r times.
+    if ( x % (n/r) != 0 ) return;
+ 
+    // Calculuate the ratio of complete-to-incomplete.
+    float ratio = x/(float)n;
+    int   c     = ratio * w;
+ 
+    // Show the percentage complete.
+    printf("%3d%% [", (int)(ratio*100) );
+ 
+    // Show the load bar.
+    for (int x=0; x<c; x++)
+       printf("=");
+ 
+    for (int x=c; x<w; x++)
+       printf(" ");
+ 
+    // ANSI Control codes to go back to the
+    // previous line and clear it.
+    // printf("]\n33[F33[J");
+printf("\r"); // Move to the first column
+fflush(stdout);
 }
 

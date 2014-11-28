@@ -244,14 +244,10 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	if (!ray.intersection.none) {
 		computeShading(ray); 
 		col = ray.col;
-		// col = Colour(1, 0, 0);
-		count++;
 	}
 
-	total++;
-
 	// You'll want to call shadeRay recursively (with a different ray, 
-	// of course) here to implement reflection/refraction effects.  
+	// of course) here to implement reflection/refraction effects.
 
 	return col; 
 }	
@@ -313,9 +309,6 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			
 		}
 	}
-
-	// printf("%0.2f %0.2f %0.2f %0.2f\n", min_x, max_x, min_y, max_y);
-	printf("hit count: %d/%d\n", count, total);
 
 	flushPixelBuffer(fileName);
 }

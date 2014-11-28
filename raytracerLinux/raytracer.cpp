@@ -395,7 +395,7 @@ int main(int argc, char* argv[])
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
 	// SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
 	// SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
-	SceneDagNode* cylinder = raytracer.addObject( new Cone(), &silver );
+	SceneDagNode* cone = raytracer.addObject( new Cone(), &silver );
 
 	
 	// Apply some transformations to the unit square.
@@ -403,21 +403,22 @@ int main(int argc, char* argv[])
 	double factor2[3] = { 6.0, 6.0, 6.0 };
 	double factor3[3] = { -1.0, 1.0, -1.0};
 
-	// raytracer.translate(sphere, Vector3D(0, 0, -5));	
-	// raytracer.rotate(sphere, 'x', -45); 
-	// raytracer.rotate(sphere, 'z', 45); 
-	// raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
+	raytracer.translate(sphere, Vector3D(-0.5, 0, -5));	
+	raytracer.rotate(sphere, 'x', -45); 
+	raytracer.rotate(sphere, 'z', 45); 
+	raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
 
-	// raytracer.translate(plane, Vector3D(0, 0, -7));	
-	// raytracer.rotate(plane, 'z', 45); 
-	// raytracer.scale(plane, Point3D(0, 0, 0), factor2);
-
-	raytracer.translate(cylinder, Vector3D(0, 0, -2));
-	raytracer.rotate(cylinder, 'y', 135);
+	raytracer.translate(plane, Vector3D(0, 0, -7));	
+	raytracer.rotate(plane, 'z', 45); 
+	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
 
 	raytracer.translate(plane2, Vector3D(-2, 0, -5));	
-	raytracer.rotate(plane2, 'y', 90); 
+	raytracer.rotate(plane2, 'y', 75); 
 	raytracer.scale(plane2, Point3D(0, 0, 0), factor2);
+
+	raytracer.translate(cone, Vector3D(1, 0, -5));	
+	raytracer.rotate(cone, 'y', 90);
+	raytracer.rotate(cone, 'z', 45);
 
 	// Render the scene, feel free to make the image smaller for
 	// testing purposes.	

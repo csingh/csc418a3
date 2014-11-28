@@ -33,11 +33,12 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Vector3D normal(0, 0, 1);
 
 	// transform ray to model space
-	ray.origin = worldToModel * ray.origin;
-	ray.dir = worldToModel * ray.dir;
+	Ray3D r;
+	r.origin = worldToModel * ray.origin;
+	r.dir = worldToModel * ray.dir;
 
 	// intersection position
-	double t = -ray.origin[2] / ray.dir[2];
+	double t = -r.origin[2] / r.dir[2];
 
 	// intersection must be in front of camera
 	if (t <= 0) {
@@ -45,8 +46,8 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	}
 
 	// x/y values for intersection on xy-plane
-	double x = ray.origin[0] + t*ray.dir[0];
-	double y = ray.origin[1] + t*ray.dir[1];
+	double x = r.origin[0] + t*r.dir[0];
+	double y = r.origin[1] + t*r.dir[1];
 	Point3D p(x, y, 0);
 
 	// make sure intersection on xy-plane is in the defined shape

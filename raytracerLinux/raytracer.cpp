@@ -188,8 +188,28 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		// Each lightSource provides its own shading function.
 
 		// Implement shadows here if needed.
+		Point3D p = ray.intersection.point;
+		Vector3D dir = curLight->light->get_position() - p;
+		// offset point slighty towards light, otherwise
+		// all rays will intersect object at t = 0
+		p = p + (0.001 * dir);
+		dir.normalize();
 
-		curLight->light->shade(ray);
+		Ray3D shadowRay(p, dir);
+
+		traverseScene(_root, shadowRay);
+
+		double t = shadowRay.intersection.t_value;
+
+		if ( !shadowRay.intersection.none &&
+			 t >= 0 && t <= 1.0 ) {
+			// shadow ray hit something, so light is being blocked
+			curLight->light->shade(ray, 1);
+		} else {
+			// shadow ray didnt hit anything, compute pixel color as normal
+			curLight->light->shade(ray, 0);
+		}
+
 		curLight = curLight->next;
 	}
 }
@@ -217,7 +237,7 @@ void Raytracer::flushPixelBuffer( char *file_name ) {
 
 Colour Raytracer::shadeRay( Ray3D& ray ) {
 	Colour col(0.0, 0.0, 0.0); 
-	traverseScene(_root, ray); 
+	traverseScene(_root, ray);
 	
 	// Don't bother shading if the ray didn't hit 
 	// anything.
@@ -253,7 +273,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 		for (int j = 0; j < _scrWidth; j++) {
 
 			// dividing the pixel into n*n subpixels for anti-aliasing
-			int n = 4; 
+			int n = 1; 
 			double scale = 1.0/(double)n; 
 			Colour col(0, 0, 0); 
 			for (int m = 0; m < n*n; m++) {
@@ -361,6 +381,7 @@ int main(int argc, char* argv[])
 
 	// Render the scene, feel free to make the image smaller for
 	// testing purposes.	
+	printf("Rendering...\n");
 	raytracer.render(width, height, eye, view, up, fov, "view1.bmp");
 	
 	// Render it from a different point of view.

@@ -374,26 +374,40 @@ int main(int argc, char* argv[])
 			Colour(0.316228, 0.316228, 0.316228), 
 			12.8 );
 
+	Material silver( Colour(0.2, 0.2, 0.2), Colour(0.50754, 0.50754, 0.50754),
+			Colour(0.508273, 0.508273, 0.508273), 
+			51.2 );
+
 	// Defines a point light source.
 	raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), 
 				Colour(0.9, 0.9, 0.9) ) );
 
 	// Add a unit square into the scene with material mat.
+
 	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
+	// SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
+	// SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
+	SceneDagNode* cylinder = raytracer.addObject( new Cone(), &silver );
+
 	
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
 	double factor2[3] = { 6.0, 6.0, 6.0 };
-	raytracer.translate(sphere, Vector3D(0, 0, -5));	
-	raytracer.rotate(sphere, 'x', -45); 
-	raytracer.rotate(sphere, 'z', 45); 
-	raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
+	double factor3[3] = { -1.0, 1.0, -1.0};
 
-	raytracer.translate(plane, Vector3D(0, 0, -7));	
-	raytracer.rotate(plane, 'z', 45); 
-	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
+	// raytracer.translate(sphere, Vector3D(0, 0, -5));	
+	// raytracer.rotate(sphere, 'x', -45); 
+	// raytracer.rotate(sphere, 'z', 45); 
+	// raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
+
+	// raytracer.translate(plane, Vector3D(0, 0, -7));	
+	// raytracer.rotate(plane, 'z', 45); 
+	// raytracer.scale(plane, Point3D(0, 0, 0), factor2);
+
+	raytracer.translate(cylinder, Vector3D(0, 0, -2));
+	raytracer.rotate(cylinder, 'y', 135);
 
 	raytracer.translate(plane2, Vector3D(-2, 0, -5));	
 	raytracer.rotate(plane2, 'y', 90); 
@@ -409,7 +423,7 @@ int main(int argc, char* argv[])
 	Vector3D view2(-4, -2, -6);
 	printf("Rendering image 2.\n");
 	raytracer.render(width, height, eye2, view2, up, fov, "view2.bmp");
-	
+
 	return 0;
 }
 

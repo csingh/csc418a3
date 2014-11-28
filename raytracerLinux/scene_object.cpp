@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include "scene_object.h"
 
 bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
@@ -125,7 +126,6 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 		if (ray.intersection.none || t < ray.intersection.t_value) {
 			ray.intersection.t_value = t;
-			// ray.intersection.point = p; 
 			ray.intersection.point = modelToWorld * p;
 			normal = worldToModel.transpose() * normal;
 			normal.normalize();
@@ -138,3 +138,244 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	return false;
 }
 
+
+bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+		const Matrix4x4& modelToWorld ) { 
+
+	//algo from https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html
+
+	// transform ray to model space
+	Point3D o = worldToModel * ray.origin;
+	Vector3D origin(o[0], o[1], o[2]);
+	Vector3D dir = worldToModel * ray.dir;
+	dir.normalize();
+
+	// check for cap intersection 
+	double t_cap = std::numeric_limits<double>::max();  
+	Vector3D cap_normal;
+	bool intersectedCap = intersectCap(o, dir, t_cap, cap_normal);
+
+	// checking for intersection of the sides of the cylinder
+
+	double t_wall = std::numeric_limits<double>::max();  
+	bool intersectedWall = intersectWall(o, dir, t_wall); 
+	
+	double t;
+	if (!intersectedCap && !intersectedWall) {
+		return false; 
+	} else if (intersectedWall && intersectedCap) {
+		t = fmin(t_wall, t_cap); 
+	} else if (intersectedWall) {
+		t = t_wall;
+	} else {
+		t = t_cap; 
+	}
+
+	// intersection pt
+	Point3D p = o + t*dir;
+
+	// surface normal at intersection
+	Vector3D wall_normal(p[0], p[1], 0);
+	
+	Vector3D normal; 
+	if (t == t_wall) {
+		normal = wall_normal; 
+	} else {
+		normal = cap_normal; 
+	}
+
+	normal.normalize();
+
+	if (ray.intersection.none || t < ray.intersection.t_value) {
+		ray.intersection.t_value = t;
+		ray.intersection.point = modelToWorld * p;
+		normal = worldToModel.transpose() * normal;
+
+		ray.intersection.normal = normal;
+		ray.intersection.none = false;
+		return true;
+	}
+
+	return false; 
+}
+
+bool Cylinder::intersectWall(Point3D origin, Vector3D direction, double& t) {
+
+	double a = direction[0]*direction[0] + direction[1]*direction[1];
+	double b = 2*(origin[0]*direction[0] + origin[1]*direction[1]);
+	double c = origin[0]*origin[0] + origin[1]*origin[1] - 1; 
+
+	bool hasIntersection = SceneObject::checkForIntersection(a, b, c, t);
+
+	if (!hasIntersection){
+		return false; 
+	}
+
+	double x = origin[0] + (t*direction[0]); 
+	double y = origin[1] + (t*direction[1]); 
+	double z = origin[2] + (t*direction[2]); 
+	if (z > MAX_Z || z < MIN_Z) {
+		return false; 
+	}
+	return true; 
+}
+
+bool Cylinder::intersectCap(Point3D origin, Vector3D direction, double& t, Vector3D &normal) {
+		//check for interesecting caps
+	
+	Vector3D min_normal(0, 0, -1);
+	Vector3D max_normal(0, 0, 1);
+	double t1 = (MIN_Z - origin[2])/direction[2];
+	double t2 = (MAX_Z - origin[2])/direction[2];
+
+	if (t1<=0 && t2 <= 0) {
+		return false; 
+	}
+
+	if (t1 <= 0 && t2 <= 0) {
+		return false; 
+	} else if (t1 <= 0 && t2 > 0) {
+		t = t2; 
+	} else if (t2 <=0 && t1 > 0) {
+		t = t1; 
+	} else if (t1 > 0 && t2 > 0) {
+		t = fmin(t1, t2); 
+	} 
+
+	double x = origin[0] + t*direction[0]; 
+	double y = origin[1] + t*direction[1]; 
+
+	if (!(x*x + y*y <= 1)) {
+		return false; 
+	}
+	
+	if (t == t1) {
+		normal = min_normal;
+	} else {
+		normal = max_normal;
+	}
+
+	return true; 
+}
+
+bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+			const Matrix4x4& modelToWorld ) {
+	
+	// transform ray to model space
+	Point3D o = worldToModel * ray.origin;
+	Vector3D origin(o[0], o[1], o[2]);
+	Vector3D d = worldToModel * ray.dir;
+	d.normalize();
+
+	double t_wall = std::numeric_limits<double>::max();  
+	bool intersectedWall = intersectWall(o, d, t_wall);
+
+	double t_cap = std::numeric_limits<double>::max();  
+	Vector3D cap_normal; 
+	bool intersectedCap = intersectCap(o, d, t_cap, cap_normal);
+
+	double t;
+	if (!intersectedCap && !intersectedWall) {
+		return false; 
+	} else if (intersectedWall && intersectedCap) {
+		t = fmin(t_wall, t_cap); 
+	} else if (intersectedWall) {
+		t = t_wall;
+	} else {
+		t = t_cap; 
+	}
+
+	// intersection pt
+	Point3D p = o + t*d;
+
+	// surface normal at intersection for walls
+	Vector3D wall_normal(2*p[0], 2*p[1], -2*p[2]);
+	
+	Vector3D normal; 
+	if (t == t_wall) {
+		normal = wall_normal; 
+	} else {
+		normal = cap_normal; 
+	}
+
+	normal.normalize();
+
+	if (ray.intersection.none || t < ray.intersection.t_value) {
+		ray.intersection.t_value = t;
+		ray.intersection.point = modelToWorld * p;
+		normal = worldToModel.transpose() * normal;
+
+		ray.intersection.normal = normal;
+		ray.intersection.none = false;
+		return true;
+	}
+
+	return false; 
+
+}
+
+bool Cone::intersectWall(Point3D o, Vector3D d, double& t){
+
+	double a = d[0]*d[0] + d[1]*d[1] - d[2]*d[2]; 
+	double b = 2*(o[0]*d[0] + o[1]*d[1] - o[2]*d[2]);
+	double c = o[0]*o[0] + o[1]*o[1] - o[2]*o[2]; 
+
+	bool hasIntersection = checkForIntersection(a, b, c, t);
+	if (!hasIntersection) {
+		return false; 
+	}
+
+	double x = o[0] + (t*d[0]); 
+	double y = o[1] + (t*d[1]); 
+	double z = o[2] + (t*d[2]); 
+	if (z > MAX_Z || z < MIN_Z) {
+		return false; 
+	}
+	return true; 
+
+}
+
+bool Cone::intersectCap(Point3D o, Vector3D d, double& t, Vector3D& n) {
+		//check for interesecting caps
+	
+	// Vector3D min_normal(0, 0, -1);
+	Vector3D max_normal(0, 0, 1);
+	// double t1 = (MIN_Z - o[2])/d[2];
+	t = (MAX_Z - o[2])/d[2];
+
+	if (t < 0) {
+		return false; 
+	}
+
+	Point3D	i = o + t*d; 
+
+	if (!(i[0]*i[0] + i[1]*i[1] <= i[2]*i[2])) {
+		return false; 
+	}
+	n = max_normal;
+
+
+	return true; 
+}
+
+bool SceneObject::checkForIntersection(double a, double b, double c, double& t){
+	
+	double d = pow(b,2) - 4*a*c;
+
+	if (d<0) {
+		return false; 
+	}
+
+	double t1 = (-b - sqrt(d)) / (2*a);
+	double t2 = (-b + sqrt(d)) / (2*a);
+	if (t1 <= 0 && t2 <= 0) {
+		return false; 
+	} else if (t1 <= 0 && t2 > 0) {
+		t = t2; 
+	} else if (t2 <=0 && t1 > 0) {
+		t = t1; 
+	} else if (t1 > 0 && t2 > 0) {
+		t = fmin(t1, t2); 
+	} 
+	return true; 
+}

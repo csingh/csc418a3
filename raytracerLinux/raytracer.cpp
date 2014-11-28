@@ -207,7 +207,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 			curLight->light->shade(ray, 1);
 		} else {
 			// shadow ray didnt hit anything, compute pixel color as normal
-			curLight->light->shade(ray, 1);
+			curLight->light->shade(ray, 0);
 		}
 
 		curLight = curLight->next;

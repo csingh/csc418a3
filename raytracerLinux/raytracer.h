@@ -15,6 +15,8 @@
 #include "scene_object.h"
 #include "light_source.h"
 
+int MAX_NUM_REFLECTIONS = 1;
+
 // Linked list containing light sources in the scene.
 struct LightListNode {
 	LightListNode() : light(NULL), next(NULL) {}

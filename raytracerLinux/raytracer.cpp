@@ -248,8 +248,11 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.
 
-	// Only supports single reflection for now
-	if ( ray.num_reflections == 0) {
+	// TODO: test multiple reflections.
+	if ( ray.num_reflections == MAX_NUM_REFLECTIONS) {
+		computeShading(ray); 
+		col = ray.col;
+	} else {
 		computeShading(ray);
 
 		// Set up incident ray
@@ -262,12 +265,8 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		Ray3D incidentRay(p, dir);
 
 		incidentRay.num_reflections = ray.num_reflections + 1;
-		col = ray.col + 0.5 * ray.intersection.mat->specular * shadeRay(incidentRay);
+		col = ray.col + ray.intersection.mat->specular * shadeRay(incidentRay);
 		col.clamp();
-
-	} else if ( ray.num_reflections == 1) {
-		computeShading(ray); 
-		col = ray.col;
 	}
 
 	return col;

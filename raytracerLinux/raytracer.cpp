@@ -192,8 +192,8 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		Vector3D dir = curLight->light->get_position() - p;
 		// offset point slighty towards light, otherwise
 		// all rays will intersect object at t = 0
-		p = p + (0.001 * dir);
 		dir.normalize();
+		p = p + (0.01 * dir);
 
 		Ray3D shadowRay(p, dir);
 
@@ -236,20 +236,42 @@ void Raytracer::flushPixelBuffer( char *file_name ) {
 }
 
 Colour Raytracer::shadeRay( Ray3D& ray ) {
-	Colour col(0.0, 0.0, 0.0); 
+	Colour col(0.0, 0.0, 0.0);
 	traverseScene(_root, ray);
 	
 	// Don't bother shading if the ray didn't hit 
 	// anything.
-	if (!ray.intersection.none) {
-		computeShading(ray); 
-		col = ray.col;
+	if (ray.intersection.none) {
+		return col;
 	}
 
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.
 
-	return col; 
+	// Only supports single reflection for now
+	if ( ray.num_reflections == 0) {
+		computeShading(ray);
+
+		// Set up incident ray
+		Point3D p = ray.intersection.point;
+		Vector3D normal(ray.intersection.normal);
+		Vector3D dir = ray.dir - 2*( normal.dot(ray.dir) * normal );
+		dir.normalize();
+		p = p + (0.01 * dir);
+
+		Ray3D incidentRay(p, dir);
+
+		incidentRay.num_reflections = ray.num_reflections + 1;
+		col = ray.col + 0.5 * ray.intersection.mat->specular * shadeRay(incidentRay);
+		col.clamp();
+
+	} else if ( ray.num_reflections == 1) {
+		computeShading(ray); 
+		col = ray.col;
+	}
+
+	return col;
+
 }	
 
 void Raytracer::render( int width, int height, Point3D eye, Vector3D view, 
@@ -359,6 +381,7 @@ int main(int argc, char* argv[])
 	// Add a unit square into the scene with material mat.
 	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
+	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
 	
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
@@ -372,14 +395,19 @@ int main(int argc, char* argv[])
 	raytracer.rotate(plane, 'z', 45); 
 	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
 
+	raytracer.translate(plane2, Vector3D(-2, 0, -5));	
+	raytracer.rotate(plane2, 'y', 90); 
+	raytracer.scale(plane2, Point3D(0, 0, 0), factor2);
+
 	// Render the scene, feel free to make the image smaller for
 	// testing purposes.	
-	printf("Rendering...\n");
+	printf("Rendering image 1.\n");
 	raytracer.render(width, height, eye, view, up, fov, "view1.bmp");
 	
 	// Render it from a different point of view.
 	Point3D eye2(4, 2, 1);
 	Vector3D view2(-4, -2, -6);
+	printf("Rendering image 2.\n");
 	raytracer.render(width, height, eye2, view2, up, fov, "view2.bmp");
 	
 	return 0;

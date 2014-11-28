@@ -176,6 +176,7 @@ struct Ray3D {
 	// Current colour of the ray, should be computed by the shading
 	// function.
 	Colour col;
+	int num_reflections = 0; // keep track of how many times ray has bounced
 };
 #endif
 

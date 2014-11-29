@@ -293,7 +293,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 		for (int j = 0; j < _scrWidth; j++) {
 
 			// dividing the pixel into n*n subpixels for anti-aliasing
-			int n = 1; 
+			int n = 2; 
 			double scale = 1.0/(double)n; 
 			Colour col(0, 0, 0); 
 			for (int m = 0; m < n*n; m++) {
@@ -424,14 +424,14 @@ void original_scene(int width, int height) {
 			51.2, 1.0 );
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 			Colour(0.316228, 0.316228, 0.316228), 
-			12.8, 1.0 );
+			12.8, 0 );
 
 	Material silver( Colour(0.2, 0.2, 0.2), Colour(0.50754, 0.50754, 0.50754),
 			Colour(0.508273, 0.508273, 0.508273), 
 			51.2, 1.0 );
 
 	// Defines a point light source.
-	raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), 
+	raytracer.addLightSource( new PointLight(Point3D(0, 0, 1), 
 				Colour(0.9, 0.9, 0.9) ) );
 
 
@@ -446,6 +446,7 @@ void original_scene(int width, int height) {
 	double factor3[3] = { 2.0, 1.5, 2.0};
 
 	raytracer.translate(sphere, Vector3D(0, 0, -5));	
+
 	// raytracer.rotate(sphere, 'x', -45); 
 	// raytracer.rotate(sphere, 'z', 45); 
 	// raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
@@ -503,7 +504,7 @@ void scene_part_b_cylinder_cone(int width, int height){
 	// randomCol.reflective=true;
 
 	// Defines a point light source.
-	raytracer.addLightSource( new PointLight(Point3D(5,10, -5), 
+	raytracer.addLightSource( new PointLight(Point3D(5, 2, -5), 
 	Colour(0.9, 0.9, 0.9) ) );
 	// raytracer.get_light_list_node()->light->set_render(ren);
 	// raytracer.get_light_list_node()->light->sample=1;
@@ -522,7 +523,7 @@ void scene_part_b_cylinder_cone(int width, int height){
 
 	raytracer.translate(sphere, Vector3D(5, 5, -7));
 
-	raytracer.translate(cylinder, Vector3D(1, 10, -20));	
+	raytracer.translate(cylinder, Vector3D(5, 10, -20));	
 	//raytracer.rotate(cylinder, 'x', -60); 
 	raytracer.rotate(cylinder, 'x', 90); 
 	// raytracer.rotate(cylinder, 'y', 90);

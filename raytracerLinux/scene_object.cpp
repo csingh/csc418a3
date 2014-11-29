@@ -13,6 +13,8 @@
 #include <limits>
 #include "scene_object.h"
 
+		#include <stdio.h>
+
 bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
 	// TODO: implement intersection code for UnitSquare, which is
@@ -205,11 +207,23 @@ bool Cylinder::intersectWall(Point3D origin, Vector3D direction, double& t) {
 	double b = 2*(origin[0]*direction[0] + origin[1]*direction[1]);
 	double c = origin[0]*origin[0] + origin[1]*origin[1] - 1; 
 
-	bool hasIntersection = SceneObject::checkForIntersection(a, b, c, t);
+	double d = pow(b,2) - 4*a*c;
 
-	if (!hasIntersection){
+	if (d<=0) {
 		return false; 
 	}
+
+	double t1 = (-b - sqrt(d)) / (2*a);
+	double t2 = (-b + sqrt(d)) / (2*a);
+	if (t1 <= 0 && t2 <= 0) {
+		return false; 
+	} else if (t1 <= 0 && t2 > 0) {
+		t = t2; 
+	} else if (t2 <=0 && t1 > 0) {
+		t = t1; 
+	} else {
+		t = fmin(t1, t2); 
+	} 
 
 	double x = origin[0] + (t*direction[0]); 
 	double y = origin[1] + (t*direction[1]); 
@@ -223,8 +237,8 @@ bool Cylinder::intersectWall(Point3D origin, Vector3D direction, double& t) {
 bool Cylinder::intersectCap(Point3D origin, Vector3D direction, double& t, Vector3D &normal) {
 		//check for interesecting caps
 	
-	Vector3D min_normal(0, 0, -1);
-	Vector3D max_normal(0, 0, 1);
+	Vector3D min_normal(0, 0, 1);
+	Vector3D max_normal(0, 0, -1);
 	double t1 = (MIN_Z - origin[2])/direction[2];
 	double t2 = (MAX_Z - origin[2])/direction[2];
 
@@ -267,37 +281,54 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Vector3D d = worldToModel * ray.dir;
 	d.normalize();
 
-	double t_wall = std::numeric_limits<double>::max();  
-	bool intersectedWall = intersectWall(o, d, t_wall);
+	double t_wall = std::numeric_limits<double>::max();
+	Vector3D wall_normal;
+	bool intersectedWall = intersectWall(o, d, t_wall, wall_normal);
 
 	double t_cap = std::numeric_limits<double>::max();  
 	Vector3D cap_normal; 
 	bool intersectedCap = intersectCap(o, d, t_cap, cap_normal);
 
+	Vector3D normal; 
 	double t;
 	if (!intersectedCap && !intersectedWall) {
 		return false; 
 	} else if (intersectedWall && intersectedCap) {
-		t = fmin(t_wall, t_cap); 
+		printf("+++BOTH++++\n");
+		if (t_wall < t_cap) {
+			printf(" --WALL\n");
+			t= t_wall; 
+			normal = wall_normal; 
+		} else {
+			printf(" -- CAP\n");
+			t=t_cap; 
+			normal = cap_normal; 
+		}
+		// t = fmin(t_wall, t_cap); 
 	} else if (intersectedWall) {
+
+		printf("+++WALL+++\n");
 		t = t_wall;
+		normal = wall_normal;
 	} else {
+		printf("+++CAP+++\n");
 		t = t_cap; 
+		normal = cap_normal;
 	}
 
 	// intersection pt
 	Point3D p = o + t*d;
 
-	// surface normal at intersection for walls
-	Vector3D wall_normal(2*p[0], 2*p[1], -2*p[2]);
-	
-	Vector3D normal; 
 	if (t == t_wall) {
 		normal = wall_normal; 
 	} else {
 		normal = cap_normal; 
 	}
 
+	printf("wall_normal: %f, %f, %f\n", wall_normal[0], wall_normal[1], wall_normal[2]);
+	printf("cap_normal: %f, %f, %f\n", cap_normal[0], cap_normal[1], cap_normal[2]);
+	printf("normal: %f, %f, %f\n", normal[0], normal[1], normal[2]);
+	
 	normal.normalize();
 
 	if (ray.intersection.none || t < ray.intersection.t_value) {
@@ -314,68 +345,67 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 }
 
-bool Cone::intersectWall(Point3D o, Vector3D d, double& t){
+bool Cone::intersectWall(Point3D o, Vector3D d, double& t, Vector3D& n){
 
 	double a = d[0]*d[0] + d[1]*d[1] - d[2]*d[2]; 
 	double b = 2*(o[0]*d[0] + o[1]*d[1] - o[2]*d[2]);
 	double c = o[0]*o[0] + o[1]*o[1] - o[2]*o[2]; 
 
-	bool hasIntersection = checkForIntersection(a, b, c, t);
-	if (!hasIntersection) {
+	double delta = pow(b,2) - 4*a*c;
+
+	if (delta<0) {
 		return false; 
 	}
 
-	double x = o[0] + (t*d[0]); 
-	double y = o[1] + (t*d[1]); 
-	double z = o[2] + (t*d[2]); 
-	if (z > MAX_Z || z < MIN_Z) {
+	double t1 = (-b - sqrt(delta)) / (2*a);
+	double t2 = (-b + sqrt(delta)) / (2*a);
+
+	if (t1 <= 0 && t2 <= 0) {
+		return false; 
+	} 
+
+	// check the point for the two roots returned
+	double z1 = o[2]+t1*d[2];
+	double z2 = o[2]+t2*d[2]; 
+	Point3D p; 
+
+	// check if z value is in range
+	bool p1_inrange = (z1 < MAX_Z && z1 >= MIN_Z);
+	bool p2_inrange = (z2 < MAX_Z && z2 >= MIN_Z);
+
+	if(t1>0  && t2 > 0 && p1_inrange && p2_inrange){
+		t = fmin(t1, t2); 
+	}
+	if (t2 > 0 && p2_inrange) {
+		t = t2; 
+	} else if (t1 > 0 && p1_inrange) {
+		t = t1;
+	} else {
 		return false; 
 	}
+
+	p = o+t*d; 
+	n = Vector3D(p[0], p[1], -p[2]);
+
 	return true; 
 
 }
 
 bool Cone::intersectCap(Point3D o, Vector3D d, double& t, Vector3D& n) {
-		//check for interesecting caps
-	
-	// Vector3D min_normal(0, 0, -1);
-	Vector3D max_normal(0, 0, 1);
-	// double t1 = (MIN_Z - o[2])/d[2];
+		
+	Vector3D max_normal(0, 0, -1);
 	t = (MAX_Z - o[2])/d[2];
 
 	if (t < 0) {
 		return false; 
 	}
 
-	Point3D	i = o + t*d; 
+	Point3D	p = o + t*d; 
 
-	if (!(i[0]*i[0] + i[1]*i[1] <= i[2]*i[2])) {
+	if (!(p[0]*p[0] + p[1]*p[1] <= p[2]*p[2])) {
 		return false; 
 	}
 	n = max_normal;
 
-
-	return true; 
-}
-
-bool SceneObject::checkForIntersection(double a, double b, double c, double& t){
-	
-	double d = pow(b,2) - 4*a*c;
-
-	if (d<0) {
-		return false; 
-	}
-
-	double t1 = (-b - sqrt(d)) / (2*a);
-	double t2 = (-b + sqrt(d)) / (2*a);
-	if (t1 <= 0 && t2 <= 0) {
-		return false; 
-	} else if (t1 <= 0 && t2 > 0) {
-		t = t2; 
-	} else if (t2 <=0 && t1 > 0) {
-		t = t1; 
-	} else if (t1 > 0 && t2 > 0) {
-		t = fmin(t1, t2); 
-	} 
 	return true; 
 }

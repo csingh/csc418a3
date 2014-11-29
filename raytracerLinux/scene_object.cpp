@@ -287,7 +287,7 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	double t_cap = std::numeric_limits<double>::max();  
 	Vector3D cap_normal; 
-	bool intersectedCap = intersectCap(o, d, t_cap, cap_normal);
+	bool intersectedCap = false;//intersectCap(o, d, t_cap, cap_normal);
 
 	Vector3D normal; 
 	double t;
@@ -375,8 +375,7 @@ bool Cone::intersectWall(Point3D o, Vector3D d, double& t, Vector3D& n){
 
 	if(t1>0  && t2 > 0 && p1_inrange && p2_inrange){
 		t = fmin(t1, t2); 
-	}
-	if (t2 > 0 && p2_inrange) {
+	} else if (t2 > 0 && p2_inrange) {
 		t = t2; 
 	} else if (t1 > 0 && p1_inrange) {
 		t = t1;
@@ -385,7 +384,7 @@ bool Cone::intersectWall(Point3D o, Vector3D d, double& t, Vector3D& n){
 	}
 
 	p = o+t*d; 
-	n = Vector3D(p[0], p[1], -p[2]);
+	n = Vector3D(2*p[0], 2*p[1], -2*p[2]);
 
 	return true; 
 

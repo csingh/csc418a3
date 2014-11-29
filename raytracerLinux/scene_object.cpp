@@ -287,7 +287,7 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	double t_cap = std::numeric_limits<double>::max();  
 	Vector3D cap_normal; 
-	bool intersectedCap = false;//intersectCap(o, d, t_cap, cap_normal);
+	bool intersectedCap = intersectCap(o, d, t_cap, cap_normal);
 
 	Vector3D normal; 
 	double t;

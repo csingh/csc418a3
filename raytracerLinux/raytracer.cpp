@@ -520,7 +520,7 @@ void scene_part_b_cylinder_cone(int width, int height){
 
 	raytracer.translate(sphere, Vector3D(5, 5, -7));
 
-	raytracer.translate(cylinder, Vector3D(1, 14, -14));	
+	raytracer.translate(cylinder, Vector3D(1, 10, -20));	
 	//raytracer.rotate(cylinder, 'x', -60); 
 	raytracer.rotate(cylinder, 'x', 90); 
 	// raytracer.rotate(cylinder, 'y', 90);

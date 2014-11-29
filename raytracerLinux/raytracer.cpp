@@ -190,6 +190,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		// Implement shadows here if needed.
 		Point3D p = ray.intersection.point;
 		Vector3D dir = curLight->light->get_position() - p;
+		double dist_to_light = dir.length();
 		// offset point slighty towards light, otherwise
 		// all rays will intersect object at t = 0
 		dir.normalize();
@@ -201,8 +202,9 @@ void Raytracer::computeShading( Ray3D& ray ) {
 
 		double t = shadowRay.intersection.t_value;
 
+		// if intersection happened between intersection point and the light source
 		if ( !shadowRay.intersection.none &&
-			 t >= 0 && t <= 1.0 ) {
+			 ( (shadowRay.intersection.point - ray.intersection.point).length() - dist_to_light ) ) {
 			// shadow ray hit something, so light is being blocked
 			curLight->light->shade(ray, 1);
 		} else {
@@ -291,7 +293,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 		for (int j = 0; j < _scrWidth; j++) {
 
 			// dividing the pixel into n*n subpixels for anti-aliasing
-			int n = 2; 
+			int n = 1; 
 			double scale = 1.0/(double)n; 
 			Colour col(0, 0, 0); 
 			for (int m = 0; m < n*n; m++) {
@@ -359,9 +361,9 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	// original_scene(width, height); 
+	original_scene(width, height); 
 
-	scene_part_b_cylinder_cone(width, height); 
+	// scene_part_b_cylinder_cone(width, height); 
 	return 0;
 }
 
@@ -444,9 +446,9 @@ void original_scene(int width, int height) {
 	double factor3[3] = { 2.0, 1.5, 2.0};
 
 	raytracer.translate(sphere, Vector3D(0, 0, -5));	
-	raytracer.rotate(sphere, 'x', -45); 
-	raytracer.rotate(sphere, 'z', 45); 
-	raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
+	// raytracer.rotate(sphere, 'x', -45); 
+	// raytracer.rotate(sphere, 'z', 45); 
+	// raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
 
 	raytracer.translate(plane, Vector3D(0, 0, -7));	
 	// raytracer.rotate(plane, 'z', 90); 

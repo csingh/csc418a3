@@ -53,6 +53,9 @@ struct SceneDagNode {
 	// geometry from object space to world space and the inverse.
 	Matrix4x4 trans;
 	Matrix4x4 invtrans;
+
+	// Used for refractions if material is transparent.
+	double density; 
 	
 	// Internal structure of the tree, you shouldn't have to worry 
 	// about them.
@@ -149,3 +152,4 @@ private:
 };
 
 static inline void loadBar(int x, int n, int r, int w, bool firstCall);
+void scene_part_b_cylinder_cone();

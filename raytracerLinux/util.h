@@ -141,6 +141,10 @@ struct Material {
 	Colour specular;
 	// Specular expoent.
 	double specular_exp;
+
+	// How transparent the material is
+	// between 0 (not transparent) and 1 (totally transparent)
+	double transparency; 
 };
 
 struct Intersection {
@@ -163,9 +167,11 @@ struct Intersection {
 struct Ray3D {
 	Ray3D() {
 		intersection.none = true; 
+		num_reflections = 0; 
 	}
 	Ray3D( Point3D p, Vector3D v ) : origin(p), dir(v) {
 		intersection.none = true;
+		num_reflections = 0; 
 	}
 	// Origin and direction of the ray.
 	Point3D origin;
@@ -176,7 +182,7 @@ struct Ray3D {
 	// Current colour of the ray, should be computed by the shading
 	// function.
 	Colour col;
-	int num_reflections = 0; // keep track of how many times ray has bounced
+	int num_reflections; // keep track of how many times ray has bounced
 };
 #endif
 

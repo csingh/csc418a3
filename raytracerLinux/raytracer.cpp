@@ -291,7 +291,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 		for (int j = 0; j < _scrWidth; j++) {
 
 			// dividing the pixel into n*n subpixels for anti-aliasing
-			int n = 1; 
+			int n = 2; 
 			double scale = 1.0/(double)n; 
 			Colour col(0, 0, 0); 
 			for (int m = 0; m < n*n; m++) {
@@ -384,23 +384,29 @@ int main(int argc, char* argv[])
 			51.2 );
 
 	// Defines a point light source.
-	raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), 
+	// raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), 
+	// 			Colour(0.9, 0.9, 0.9) ) );
+
+	raytracer.addLightSource( new PointLight(Point3D(5, 0, 0), 
 				Colour(0.9, 0.9, 0.9) ) );
 
 	// Add a unit square into the scene with material mat.
 
-	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
+	// SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
+	
 	// SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
 	// SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* cone = raytracer.addObject( new Cone(), &silver );
 
-	
+
+	SceneDagNode* cone = raytracer.addObject( new Cylinder(), &silver );
+
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
 	double factor2[3] = { 6.0, 6.0, 6.0 };
-	double factor3[3] = { -1.0, 1.0, -1.0};
+	double factor3[3] = { 2.0, 1.5, 2.0};
 
 	raytracer.translate(sphere, Vector3D(-0.5, 0, -5));	
 	raytracer.rotate(sphere, 'x', -45); 
@@ -423,12 +429,38 @@ int main(int argc, char* argv[])
 	// testing purposes.	
 	printf("Rendering image 1...");
 	raytracer.render(width, height, eye, view, up, fov, "view1.bmp");
+
+	// raytracer.translate(sphere, Vector3D(0, 0, -5));	
+	// raytracer.rotate(sphere, 'x', -45); 
+	// raytracer.rotate(sphere, 'z', 45); 
+	// raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
+
+	raytracer.translate(plane, Vector3D(0, 0, -7));	
+	// raytracer.rotate(plane, 'z', 90); 
+	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
+
+	raytracer.translate(cone, Vector3D(0, 0, -5));
+	// raytracer.rotate(cone, 'y', 180);
+	raytracer.scale(cone, Point3D(0, 0, 0), factor3);
+
+	raytracer.translate(plane2, Vector3D(-2, 0, -5));	
+	raytracer.rotate(plane2, 'y', 90); 
+	// raytracer.rotate(plane2, 'z', 90);
+	raytracer.scale(plane2, Point3D(0, 0, 0), factor2);
+
+	scene_part_b_cylinder_cone(); 
+	// // Render the scene, feel free to make the image smaller for
+	// // testing purposes.	
+	// printf("Rendering image 1...");
+	// raytracer.render(width, height, eye, view, up, fov, "images/view1.bmp");
 	
-	// Render it from a different point of view.
-	Point3D eye2(4, 2, 1);
-	Vector3D view2(-4, -2, -6);
-	printf("Rendering image 2...");
-	raytracer.render(width, height, eye2, view2, up, fov, "view2.bmp");
+	// // Render it from a different point of view.
+	// // Point3D eye2(5, 0, 0);
+	// // Vector3D view2(-5, 0, -7);
+	// Point3D eye2(4, 2, 1);
+	// Vector3D view2(-4, -2, -6);
+	// printf("Rendering image 2...");
+	// raytracer.render(width, height, eye2, view2, up, fov, "images/view2.bmp");
 
 	return 0;
 }
@@ -470,3 +502,91 @@ printf("\r"); // Move to the first column
 fflush(stdout);
 }
 
+void scene_part_b_cylinder_cone(){
+
+	Raytracer raytracer;
+	int width = 320; 
+	int height = 240; 
+
+	// Camera parameters.
+	Point3D eye(0, 30, 1);
+	Vector3D view(0, -17, -20);
+	Vector3D up(0, 1, 0);
+	double fov = 60;
+
+	// Defines a material for shading.
+	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
+	Colour(0.628281, 0.555802, 0.366065), 
+	51.2 );
+	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
+	Colour(0.316228, 0.316228, 0.316228), 
+	12.8 );
+	Material randomCol( Colour(.6, .1, 0), Colour(0.12, 0.89, 0.9), 
+	Colour(0.1, 0.9, 0.5), 
+	51.2 );
+	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
+	Colour(0.774597,	0.774597,	0.774597), 
+	76.8 );
+	// gold.reflective=false;
+	// jade.reflective=false;
+	// chrome.reflective=false;
+	// randomCol.reflective=true;
+
+	// Defines a point light source.
+	raytracer.addLightSource( new PointLight(Point3D(5,10, -5), 
+	Colour(0.9, 0.9, 0.9) ) );
+	// raytracer.get_light_list_node()->light->set_render(ren);
+	// raytracer.get_light_list_node()->light->sample=1;
+	// Add a unit square into the scene with material mat.
+	SceneDagNode* cylinder = raytracer.addObject( new Cylinder(), &chrome );
+	SceneDagNode* cone = raytracer.addObject( new Cone(), &gold );
+	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &randomCol);
+	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
+	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
+	SceneDagNode* plane3 = raytracer.addObject( new UnitSquare(), &jade );
+	
+	// Apply some transformations to the unit square.
+	double factor1[3] = { 3.0, 3.0, 8.0 };
+	double factor2[3] = { 20.0, 20.0, 15.0 };
+	double factor3[3] = { 20.0, 20.0, 7.0 };
+
+	raytracer.translate(sphere, Vector3D(5, 5, -7));
+
+	raytracer.translate(cylinder, Vector3D(1, 14, -14));	
+	//raytracer.rotate(cylinder, 'x', -60); 
+	raytracer.rotate(cylinder, 'x', 90); 
+	// raytracer.rotate(cylinder, 'y', 90);
+	raytracer.scale(cylinder, Point3D(3, -1, 0), factor1);
+
+	raytracer.translate(cone, Vector3D(7, 8, -16));	
+	raytracer.rotate(cone, 'x', 25); 
+	// raytracer.rotate(cone, 'y', 90);
+	raytracer.rotate(cone, 'x', 90); 
+	raytracer.scale(cone, Point3D(3, -1, 0), factor1);
+
+	raytracer.translate(plane, Vector3D(7,10, -22));	
+	//	raytracer.rotate(plane, 'x', 40); 
+	//raytracer.rotate(plane, 'z', 90); 
+	raytracer.rotate(plane, 'y', -45);
+	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
+	raytracer.translate(plane2, Vector3D(-7, 10, -22));	
+	//raytracer.rotate(plane2, 'x', -90); 
+	//raytracer.rotate(plane2, 'z', -20); 
+	raytracer.rotate(plane2, 'y', 45);
+	raytracer.scale(plane2, Point3D(0, 0, 0), factor2);
+	raytracer.translate(plane3, Vector3D(0, 0, -15));	
+	raytracer.rotate(plane3, 'x', -90); 
+	//raytracer.rotate(plane2, 'z', 45); 
+	raytracer.rotate(plane3, 'z', -45);
+	raytracer.scale(plane3, Point3D(0, 0, 0), factor2);
+
+	// Render the scene, feel free to make the image smaller for
+	// testing purposes.	
+	printf("Rendering image 1...");
+	raytracer.render(width, height, eye, view, up, fov, "images/cc_view1.bmp");
+	// Render it from a different point of view.
+	Point3D eye2(4, 2, 5);
+	Vector3D view2(-2, 0, -6);
+	printf("Rendering image 2...");
+	raytracer.render(width, height, eye2, view2, up, fov, "images/cc_view2.bmp");
+}

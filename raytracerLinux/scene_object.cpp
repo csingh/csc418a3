@@ -237,8 +237,8 @@ bool Cylinder::intersectWall(Point3D origin, Vector3D direction, double& t) {
 bool Cylinder::intersectCap(Point3D origin, Vector3D direction, double& t, Vector3D &normal) {
 		//check for interesecting caps
 	
-	Vector3D min_normal(0, 0, 1);
-	Vector3D max_normal(0, 0, -1);
+	Vector3D min_normal(0, 0, -1);
+	Vector3D max_normal(0, 0, 1);
 	double t1 = (MIN_Z - origin[2])/direction[2];
 	double t2 = (MAX_Z - origin[2])/direction[2];
 
@@ -294,24 +294,21 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	if (!intersectedCap && !intersectedWall) {
 		return false; 
 	} else if (intersectedWall && intersectedCap) {
-		printf("+++BOTH++++\n");
 		if (t_wall < t_cap) {
-			printf(" --WALL\n");
+
 			t= t_wall; 
 			normal = wall_normal; 
 		} else {
-			printf(" -- CAP\n");
+
 			t=t_cap; 
 			normal = cap_normal; 
 		}
 		// t = fmin(t_wall, t_cap); 
 	} else if (intersectedWall) {
 
-		printf("+++WALL+++\n");
 		t = t_wall;
 		normal = wall_normal;
 	} else {
-		printf("+++CAP+++\n");
 		t = t_cap; 
 		normal = cap_normal;
 	}
@@ -324,10 +321,6 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	} else {
 		normal = cap_normal; 
 	}
-
-	printf("wall_normal: %f, %f, %f\n", wall_normal[0], wall_normal[1], wall_normal[2]);
-	printf("cap_normal: %f, %f, %f\n", cap_normal[0], cap_normal[1], cap_normal[2]);
-	printf("normal: %f, %f, %f\n", normal[0], normal[1], normal[2]);
 	
 	normal.normalize();
 
@@ -392,7 +385,7 @@ bool Cone::intersectWall(Point3D o, Vector3D d, double& t, Vector3D& n){
 
 bool Cone::intersectCap(Point3D o, Vector3D d, double& t, Vector3D& n) {
 		
-	Vector3D max_normal(0, 0, -1);
+	Vector3D max_normal(0, 0, 1);
 	t = (MAX_Z - o[2])/d[2];
 
 	if (t < 0) {

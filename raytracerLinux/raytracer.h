@@ -152,4 +152,5 @@ private:
 };
 
 static inline void loadBar(int x, int n, int r, int w, bool firstCall);
-void scene_part_b_cylinder_cone();
+void scene_part_b_cylinder_cone(int width, int height);
+void original_scene(int width, int height); 

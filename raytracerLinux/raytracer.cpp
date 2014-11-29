@@ -267,7 +267,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		Ray3D incidentRay(p, dir);
 
 		incidentRay.num_reflections = ray.num_reflections + 1;
-		col = ray.col + ray.intersection.mat->specular * shadeRay(incidentRay);
+		col = ray.col + ray.intersection.mat->reflectance * ray.intersection.mat->specular * shadeRay(incidentRay);
 		col.clamp();
 	}
 
@@ -421,14 +421,14 @@ void original_scene(int width, int height) {
 	// Defines a material for shading.
 	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
 			Colour(0.628281, 0.555802, 0.366065), 
-			51.2 );
+			51.2, 1.0 );
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 			Colour(0.316228, 0.316228, 0.316228), 
-			12.8 );
+			12.8, 1.0 );
 
 	Material silver( Colour(0.2, 0.2, 0.2), Colour(0.50754, 0.50754, 0.50754),
 			Colour(0.508273, 0.508273, 0.508273), 
-			51.2 );
+			51.2, 1.0 );
 
 	// Defines a point light source.
 	raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), 
@@ -487,16 +487,16 @@ void scene_part_b_cylinder_cone(int width, int height){
 	// Defines a material for shading.
 	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
 	Colour(0.628281, 0.555802, 0.366065), 
-	51.2 );
+	51.2, 1.0 );
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 	Colour(0.316228, 0.316228, 0.316228), 
-	12.8 );
+	12.8, 1.0 );
 	Material randomCol( Colour(.6, .1, 0), Colour(0.12, 0.89, 0.9), 
 	Colour(0.1, 0.9, 0.5), 
-	51.2 );
+	51.2, 1.0 );
 	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
 	Colour(0.774597,	0.774597,	0.774597), 
-	76.8 );
+	76.8, 1.0 );
 	// gold.reflective=false;
 	// jade.reflective=false;
 	// chrome.reflective=false;

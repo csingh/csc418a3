@@ -251,11 +251,17 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	// of course) here to implement reflection/refraction effects.
 
 	// TODO: test multiple reflections.
-	if ( ray.num_reflections == MAX_NUM_REFLECTIONS) {
+	if ( ray.num_reflections == MAX_NUM_REFLECTIONS ) {
 		computeShading(ray); 
 		col = ray.col;
-	} else {
-		computeShading(ray);
+	} else{
+		computeShading(ray); 
+
+	// base colour of ray
+	// computeShading(ray); 
+	// col = ray.col;
+
+	// if (ray.intersection.mat->reflectance > 0 && ray.num_reflections < MAX_NUM_REFLECTIONS) {
 
 		// Set up incident ray
 		Point3D p = ray.intersection.point;
@@ -271,8 +277,10 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		col.clamp();
 	}
 
+	if (ray.intersection.mat->refractance >0) {
+		//refraction goes here
+	}
 	return col;
-
 }	
 
 void Raytracer::render( int width, int height, Point3D eye, Vector3D view, 
@@ -361,9 +369,9 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	original_scene(width, height); 
+	// original_scene(width, height); 
 
-	// scene_part_b_cylinder_cone(width, height); 
+	scene_part_b_cylinder_cone(width, height); 
 	return 0;
 }
 
@@ -421,14 +429,14 @@ void original_scene(int width, int height) {
 	// Defines a material for shading.
 	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
 			Colour(0.628281, 0.555802, 0.366065), 
-			51.2, 1.0 );
+			51.2, 1.0 , 0.0);
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 			Colour(0.316228, 0.316228, 0.316228), 
-			12.8, 0 );
+			12.8, 0.0 , 0.0);
 
 	Material silver( Colour(0.2, 0.2, 0.2), Colour(0.50754, 0.50754, 0.50754),
 			Colour(0.508273, 0.508273, 0.508273), 
-			51.2, 1.0 );
+			51.2, 1.0 , 0.0);
 
 	// Defines a point light source.
 	raytracer.addLightSource( new PointLight(Point3D(0, 0, 1), 
@@ -488,16 +496,16 @@ void scene_part_b_cylinder_cone(int width, int height){
 	// Defines a material for shading.
 	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
 	Colour(0.628281, 0.555802, 0.366065), 
-	51.2, 1.0 );
+	51.2, 1.0, 0.0);
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 	Colour(0.316228, 0.316228, 0.316228), 
-	12.8, 1.0 );
+	12.8, 1.0, 0.0);
 	Material randomCol( Colour(.6, .1, 0), Colour(0.12, 0.89, 0.9), 
 	Colour(0.1, 0.9, 0.5), 
-	51.2, 1.0 );
+	51.2, 1.0, 0.0);
 	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
 	Colour(0.774597,	0.774597,	0.774597), 
-	76.8, 1.0 );
+	76.8, 1.0, 0.0);
 	// gold.reflective=false;
 	// jade.reflective=false;
 	// chrome.reflective=false;

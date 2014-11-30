@@ -129,9 +129,10 @@ Colour operator +(const Colour& u, const Colour& v);
 std::ostream& operator <<(std::ostream& o, const Colour& c); 
 
 struct Material {
-	Material( Colour ambient, Colour diffuse, Colour specular, double exp, double reflectance ) :
+	Material( Colour ambient, Colour diffuse, Colour specular, double exp, 
+		double reflectance, double refractance) :
 		ambient(ambient), diffuse(diffuse), specular(specular), 
-		specular_exp(exp), reflectance(reflectance) {}
+		specular_exp(exp), reflectance(reflectance), refractance(refractance) {}
 	
 	// Ambient components for Phong shading.
 	Colour ambient; 
@@ -144,7 +145,7 @@ struct Material {
 
 	// How transparent the material is
 	// between 0 (not transparent) and 1 (totally transparent)
-	double transparency;
+	double refractance;
 
 	// How much light this material reflects
 	// between 0 (doesn't reflect) and 1 (perfect mirror)

@@ -308,7 +308,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 			}
 
 			if (i > 0) {
-				col = (1.0 / i) * col;
+				col = ( 1.0 / (i*ray.intersection.mat->reflectance) ) * col;
 			}
 		}
 
@@ -621,7 +621,7 @@ void scene_single_sphere(int width, int height){
 	12.8, 1.0 );
 	Material randomCol( Colour(1, 0, 0), Colour(0.12, 0.89, 0.9), 
 	Colour(0.1, 0.9, 0.5), 
-	51.2, 0.2 );
+	51.2, 1.0 );
 	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
 	Colour(0.774597,	0.774597,	0.774597), 
 	76.8, 0 );

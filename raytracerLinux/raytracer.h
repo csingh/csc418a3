@@ -17,7 +17,7 @@
 
 int NUM_AA_SAMPLES = 1; // NUM_AA_SAMPLES^2 samples per pixel
 int NUM_REFLECTION_RAYS = 1; // Number of bounces for a ray
-int NUM_SHADOW_RAYS = 0; // Number of shadow rays (more = less jittery shadows)
+int NUM_SHADOW_RAYS = 5; // Number of shadow rays (more = less jittery shadows)
 int NUM_GLOSSY_REFLECTION_RAYS = 10; // (more = less jittery glossy reflections)
 double GLOSS_AMOUNT = 3; // higher number means more blurry reflections, but also more jittery
 

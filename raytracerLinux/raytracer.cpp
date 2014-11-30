@@ -251,17 +251,12 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	// of course) here to implement reflection/refraction effects.
 
 	// TODO: test multiple reflections.
-	if ( ray.num_reflections == MAX_NUM_REFLECTIONS ) {
-		computeShading(ray); 
-		col = ray.col;
-	} else{
-		computeShading(ray); 
-
 	// base colour of ray
-	// computeShading(ray); 
-	// col = ray.col;
+	computeShading(ray); 
+	col = ray.col;
 
-	// if (ray.intersection.mat->reflectance > 0 && ray.num_reflections < MAX_NUM_REFLECTIONS) {
+	// reflection code
+	if (ray.intersection.mat->reflectance > 0 && ray.num_reflections < MAX_NUM_REFLECTIONS) {
 
 		// Set up incident ray
 		Point3D p = ray.intersection.point;
@@ -277,8 +272,37 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		col.clamp();
 	}
 
-	if (ray.intersection.mat->refractance >0) {
-		//refraction goes here
+	// refraction code
+	if (ray.intersection.mat->refracive_ind > 0 && ray.num_reflections < MAX_NUM_REFLECTIONS) {
+		Vector3D normal(ray.intersection.normal);
+		normal.normalize();
+		Vector3D rdir = ray.dir;
+		rdir.normalize(); 
+
+		// check if leaving or entering material by checking normal
+		double n = ray.refrac_ind/ray.intersection.mat->refracive_ind; 
+		// invert the refractance if leaving the object
+		if  (rdir.dot(normal) < 0) {
+			n = ray.intersection.mat->refracive_ind;
+		} 
+
+		// https://www.cs.unc.edu/~rademach/xroads-RT/RTarticle.html
+		
+		double c1 = -normal.dot(rdir);
+		double c2 = 1.0-pow(n,2)*(1.0-pow(c1,2)); 
+
+		if (c2 > 0.0)
+		{
+			Vector3D refractDir = (n*rdir) + (n*c1 -sqrt(c2))*normal; 
+			refractDir.normalize(); 
+			
+			Ray3D refractRay(ray.intersection.point, refractDir);
+			
+			refractRay.num_reflections = ray.num_reflections + 1;
+			col = col + shadeRay(refractRay);
+			col.clamp();
+		}
+
 	}
 	return col;
 }	
@@ -292,7 +316,6 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 
 	initPixelBuffer();
 	viewToWorld = initInvViewMatrix(eye, view, up);
-
 	// float min_x = 0, max_x = 0, min_y = 0, max_y = 0;
 
 	bool firstCall = true;
@@ -369,9 +392,9 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	// original_scene(width, height); 
+	original_scene(width, height); 
 
-	scene_part_b_cylinder_cone(width, height); 
+	// scene_part_b_cylinder_cone(width, height); 
 	return 0;
 }
 
@@ -438,14 +461,18 @@ void original_scene(int width, int height) {
 			Colour(0.508273, 0.508273, 0.508273), 
 			51.2, 1.0 , 0.0);
 
-	// Defines a point light source.
-	raytracer.addLightSource( new PointLight(Point3D(0, 0, 1), 
-				Colour(0.9, 0.9, 0.9) ) );
+	Material glass( Colour(0,0,0), Colour(0.55, 0.55, 0.55), 
+			Colour(0.70, 0.70, 0.70),
+			0.25, 0.0 , 1.5); 
 
+
+	// Defines a point light source.
+	raytracer.addLightSource( new PointLight(Point3D(10, 10, 3), 
+				Colour(0.9, 0.9, 0.9) ) );
 
 	// Add a unit square into the scene with material mat.
 
-	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
+	SceneDagNode* sphere = raytracer.addObject( new Cylinder(), &glass );
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
 	// Apply some transformations to the unit square.
@@ -453,7 +480,7 @@ void original_scene(int width, int height) {
 	double factor2[3] = { 6.0, 6.0, 6.0 };
 	double factor3[3] = { 2.0, 1.5, 2.0};
 
-	raytracer.translate(sphere, Vector3D(0, 0, -5));	
+	raytracer.translate(sphere, Vector3D(0, 0, -2));	
 
 	// raytracer.rotate(sphere, 'x', -45); 
 	// raytracer.rotate(sphere, 'z', 45); 

@@ -187,30 +187,41 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		if (curLight == NULL) break;
 		// Each lightSource provides its own shading function.
 
-		// Implement shadows here if needed.
-		Point3D p = ray.intersection.point;
-		Vector3D dir = curLight->light->get_position() - p;
-		double dist_to_light = dir.length();
-		// offset point slighty towards light, otherwise
-		// all rays will intersect object at t = 0
-		dir.normalize();
-		p = p + (0.01 * dir);
+		int i = 0;
+		for (i = 0; i < NUM_SHADOW_RAYS; i++) {
+			// Implement shadows here if needed.
+			Point3D p = ray.intersection.point;
+			Vector3D dir = curLight->light->get_position() - p;
+			double dist_to_light = dir.length();
+			// offset point slighty towards light, otherwise
+			// all rays will intersect object at t = 0
+			dir.normalize();
+			p = p + (0.01 * dir);
 
-		Ray3D shadowRay(p, dir);
+			Ray3D shadowRay(p, dir);
 
-		traverseScene(_root, shadowRay);
+			traverseScene(_root, shadowRay);
 
-		double t = shadowRay.intersection.t_value;
+			double t = shadowRay.intersection.t_value;
 
-		// if intersection happened between intersection point and the light source
-		if ( !shadowRay.intersection.none &&
-			 ( (shadowRay.intersection.point - ray.intersection.point).length() - dist_to_light ) ) {
-			// shadow ray hit something, so light is being blocked
-			curLight->light->shade(ray, 1);
-		} else {
-			// shadow ray didnt hit anything, compute pixel color as normal
-			curLight->light->shade(ray, 0);
+			// if intersection happened between intersection point and the light source
+			if ( !shadowRay.intersection.none &&
+				 ( (shadowRay.intersection.point - ray.intersection.point).length() - dist_to_light ) ) {
+				// shadow ray hit something, so light is being blocked
+				curLight->light->shade(ray, 1);
+			} else {
+				// shadow ray didnt hit anything, compute pixel color as normal
+				curLight->light->shade(ray, 0);
+			}
 		}
+
+		if (i == 0) {
+			curLight->light->shade(ray, 0);
+		} else {
+			ray.col = (1.0 / i) * ray.col;
+		}
+
+		ray.col.clamp();
 
 		curLight = curLight->next;
 	}
@@ -250,8 +261,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.
 
-	// TODO: test multiple reflections.
-	if ( ray.num_reflections == MAX_NUM_REFLECTIONS) {
+	if ( ray.num_reflections == NUM_REFLECTION_RAYS) {
 		computeShading(ray); 
 		col = ray.col;
 	} else {
@@ -301,8 +311,8 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 				int x = m % n; 
 
 				// to sample a random x and y in this sub pixel 
-				double rand_x = fRand(x*scale, (x+1)*scale);  
-				double rand_y = fRand(y*scale, (y+1)*scale); 
+				double rand_x = rand_range(x*scale, (x+1)*scale);  
+				double rand_y = rand_range(y*scale, (y+1)*scale); 
 
 				double x_ = (-double(width)/2 + rand_x + j)/factor;
 				double y_ = (-double(height)/2 + rand_y + i)/factor; 
@@ -342,12 +352,6 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 	flushPixelBuffer(fileName);
 }
 
-double Raytracer::fRand(double fMin, double fMax)
-{
-    double f = (double)rand() / RAND_MAX;
-    return fMin + f * (fMax - fMin);
-}
-
 int main(int argc, char* argv[])
 {	
 	//setting up the randomizer
@@ -361,9 +365,9 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	original_scene(width, height); 
-
-	// scene_part_b_cylinder_cone(width, height); 
+	// original_scene(width, height); 
+	// scene_part_b_cylinder_cone(width, height);
+	scene_single_sphere(width, height); 
 	return 0;
 }
 
@@ -562,3 +566,90 @@ void scene_part_b_cylinder_cone(int width, int height){
 	raytracer.render(width, height, eye2, view2, up, fov, "images/cc_view2.bmp");
 }
 
+void scene_single_sphere(int width, int height){
+
+	Raytracer raytracer;
+
+	// Camera parameters.
+	Point3D eye(0, 30, 1);
+	Vector3D view(0, -17, -20);
+	Vector3D up(0, 1, 0);
+	double fov = 70;
+
+	// Defines a material for shading.
+	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
+	Colour(0.628281, 0.555802, 0.366065), 
+	51.2, 1.0 );
+	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
+	Colour(0.316228, 0.316228, 0.316228), 
+	12.8, 1.0 );
+	Material randomCol( Colour(.6, .1, 0), Colour(0.12, 0.89, 0.9), 
+	Colour(0.1, 0.9, 0.5), 
+	51.2, 1.0 );
+	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
+	Colour(0.774597,	0.774597,	0.774597), 
+	76.8, 1.0 );
+	// gold.reflective=false;
+	// jade.reflective=false;
+	// chrome.reflective=false;
+	// randomCol.reflective=true;
+
+	// Defines a point light source.
+	raytracer.addLightSource( new AreaLight(Point3D(0, 60, -15), 
+	Vector3D(10,0,0), Vector3D(0,0,10), Colour(0.9, 0.9, 0.9) ) );
+	// raytracer.get_light_list_node()->light->set_render(ren);
+	// raytracer.get_light_list_node()->light->sample=1;
+	// Add a unit square into the scene with material mat.
+	// SceneDagNode* cylinder = raytracer.addObject( new Cylinder(), &chrome );
+	// SceneDagNode* cone = raytracer.addObject( new Cone(), &gold );
+	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &randomCol);
+	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
+	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
+	SceneDagNode* plane3 = raytracer.addObject( new UnitSquare(), &jade );
+	
+	// Apply some transformations to the unit square.
+	double factor1[3] = { 3.0, 3.0, 8.0 };
+	double factor2[3] = { 20.0, 20.0, 15.0 };
+	double factor3[3] = { 3,3,3 };
+
+	raytracer.translate(sphere, Vector3D(0, 10, -15));
+	raytracer.scale(sphere, Point3D(0,0,0), factor3);
+
+	// raytracer.translate(cylinder, Vector3D(5, 10, -15));	
+	// //raytracer.rotate(cylinder, 'x', -60); 
+	// raytracer.rotate(cylinder, 'x', 90); 
+	// // raytracer.rotate(cylinder, 'y', 90);
+	// raytracer.scale(cylinder, Point3D(3, -1, 0), factor1);
+
+	// raytracer.translate(cone, Vector3D(7, 8, -16));	
+	// raytracer.rotate(cone, 'x', 25); 
+	// // raytracer.rotate(cone, 'y', 90);
+	// raytracer.rotate(cone, 'x', 90); 
+	// raytracer.scale(cone, Point3D(3, -1, 0), factor1);
+
+	raytracer.translate(plane, Vector3D(7,10, -22));	
+	//	raytracer.rotate(plane, 'x', 40); 
+	//raytracer.rotate(plane, 'z', 90); 
+	raytracer.rotate(plane, 'y', -45);
+	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
+	raytracer.translate(plane2, Vector3D(-7, 10, -22));	
+	//raytracer.rotate(plane2, 'x', -90); 
+	//raytracer.rotate(plane2, 'z', -20); 
+	raytracer.rotate(plane2, 'y', 45);
+	raytracer.scale(plane2, Point3D(0, 0, 0), factor2);
+	raytracer.translate(plane3, Vector3D(0, 0, -15));	
+	raytracer.rotate(plane3, 'x', -90); 
+	//raytracer.rotate(plane2, 'z', 45); 
+	raytracer.rotate(plane3, 'z', -45);
+	raytracer.scale(plane3, Point3D(0, 0, 0), factor2);
+
+	// Render the scene, feel free to make the image smaller for
+	// testing purposes.	
+	printf("Rendering image 1...");
+	raytracer.render(width, height, eye, view, up, fov, "images/cc_view1.bmp");
+	// Render it from a different point of view.
+	Point3D eye2(4, 2, 5);
+	Vector3D view2(-2, 0, -6);
+	printf("Rendering image 2...");
+	raytracer.render(width, height, eye2, view2, up, fov, "images/cc_view2.bmp");
+}

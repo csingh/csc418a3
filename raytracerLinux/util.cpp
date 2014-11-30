@@ -387,5 +387,9 @@ std::ostream& operator <<(std::ostream& os, const Matrix4x4& M) {
 		<< M[3][2] << " " << M[3][3] << "]";
 }
 
-
+double rand_range(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
 

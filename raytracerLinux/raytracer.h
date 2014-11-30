@@ -15,7 +15,8 @@
 #include "scene_object.h"
 #include "light_source.h"
 
-int MAX_NUM_REFLECTIONS = 1;
+int NUM_REFLECTION_RAYS = 0;
+int NUM_SHADOW_RAYS = 5;
 
 // Linked list containing light sources in the scene.
 struct LightListNode {
@@ -154,3 +155,5 @@ private:
 static inline void loadBar(int x, int n, int r, int w, bool firstCall);
 void scene_part_b_cylinder_cone(int width, int height);
 void original_scene(int width, int height); 
+void scene_single_sphere(int width, int height); 
+

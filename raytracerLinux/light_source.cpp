@@ -50,7 +50,49 @@ void PointLight::shade( Ray3D& ray, int shadingType ) {
 	} else {
 		ray.col = amb_ + dif_ + spec_; 
 	}
-	ray.col.clamp(); 
+	// ray.col.clamp(); 
+
+}
+
+Point3D AreaLight::get_position() {
+	double u_mult = rand_range(-1, 1);  
+	double v_mult = rand_range(-1, 1); 
+
+	return _pos + (u_mult * _u) + (v_mult * _v);
+}
+
+void AreaLight::shade( Ray3D& ray, int shadingType ) { 
+
+	// normalized vector from intersection point to light
+	Vector3D light_ray = _pos - ray.intersection.point; 
+	light_ray.normalize(); 
+
+	Vector3D normal = ray.intersection.normal; 
+	normal.normalize(); 
+
+	// normalized vector in the reflection direction
+	Vector3D reflect_dir = 2*(normal.dot(light_ray))*normal - light_ray; 
+	reflect_dir.normalize(); 
+
+	Material* mat = ray.intersection.mat; 
+
+	Colour amb_ = mat->ambient*_col_ambient; 
+
+	Vector3D camera = -ray.dir; 
+	camera.normalize(); 
+
+	double dif_comp = fmax(0.0, (light_ray.dot(normal))); 
+	Colour dif_ = dif_comp * (mat->diffuse*_col_diffuse);
+	
+	double spec_comp = fmax(0.0, pow((reflect_dir.dot(camera)), mat->specular_exp));
+	Colour spec_= spec_comp * (mat->specular*_col_specular); 
+
+	if (shadingType == 1) {
+		ray.col = ray.col + amb_;
+	} else {
+		ray.col = ray.col + amb_ + dif_ + spec_; 
+	}
+	// ray.col.clamp(); 
 
 }
 

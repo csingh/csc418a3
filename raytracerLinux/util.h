@@ -190,7 +190,7 @@ struct Ray3D {
 };
 #endif
 
-
+double rand_range(double fMin, double fMax);
 
 
 

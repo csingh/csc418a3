@@ -48,6 +48,7 @@ public:
 	double normalize();
 	double dot(const Vector3D& other) const; 
 	Vector3D cross(const Vector3D& other) const; 
+	Vector3D orthonormal_vector();
 
 private:
 	double m_data[3];

@@ -202,8 +202,6 @@ void Raytracer::computeShading( Ray3D& ray ) {
 
 			traverseScene(_root, shadowRay);
 
-			double t = shadowRay.intersection.t_value;
-
 			// if intersection happened between intersection point and the light source
 			if ( !shadowRay.intersection.none &&
 				 ( (shadowRay.intersection.point - ray.intersection.point).length() - dist_to_light ) ) {
@@ -251,7 +249,7 @@ void Raytracer::flushPixelBuffer( char *file_name ) {
 Colour Raytracer::shadeRay( Ray3D& ray ) {
 	Colour col(0.0, 0.0, 0.0);
 	traverseScene(_root, ray);
-	
+
 	// Don't bother shading if the ray didn't hit 
 	// anything.
 	if (ray.intersection.none) {
@@ -266,6 +264,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		col = ray.col;
 	} else {
 		computeShading(ray);
+		col = ray.col;
 
 		// Set up incident ray
 		Point3D p = ray.intersection.point;
@@ -273,12 +272,49 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		Vector3D dir = ray.dir - 2*( normal.dot(ray.dir) * normal );
 		dir.normalize();
 		p = p + (0.01 * dir);
-
 		Ray3D incidentRay(p, dir);
 
-		incidentRay.num_reflections = ray.num_reflections + 1;
-		col = ray.col + ray.intersection.mat->reflectance * ray.intersection.mat->specular * shadeRay(incidentRay);
-		col.clamp();
+		// Find vectors u,v that make a plane perpendular to incident ray
+		Vector3D u = dir.orthonormal_vector();
+		Vector3D v = dir.cross(u);
+		v.normalize();
+
+		if (ray.intersection.mat->reflectance > 0) {
+			int i = 0;
+			Ray3D gloss_ray;
+			for (i = 0; i < NUM_GLOSSY_REFLECTION_RAYS; i++) {
+				double u_mult = rand_range(-GLOSS_AMOUNT, GLOSS_AMOUNT);  
+				double v_mult = rand_range(-GLOSS_AMOUNT, GLOSS_AMOUNT);
+
+				Point3D glossy_ray_point = p + (u_mult * u) + (v_mult * v);
+				// Vector3D glossy_ray_dir = dir + (u_mult * u) + (v_mult * v);
+				Vector3D glossy_ray_dir = dir;
+				glossy_ray_dir.normalize();
+
+				gloss_ray = Ray3D(glossy_ray_point, glossy_ray_dir);
+				gloss_ray.intersection.mat = ray.intersection.mat;
+				// computeShading(gloss_ray);
+				// col = col + gloss_ray.col;
+
+				gloss_ray.num_reflections = ray.num_reflections + 1;
+				col = col + ray.intersection.mat->reflectance * shadeRay(gloss_ray);
+
+			}
+
+			if (i == 0) {
+				// if using glossy reflections then 
+				// recurse on a random gloss_ray
+				incidentRay = gloss_ray;
+			}
+
+			if (i > 0) {
+				col = (1.0 / i) * col;
+			}
+		}
+
+		// incidentRay.num_reflections = ray.num_reflections + 1;
+		// col = col + ray.intersection.mat->reflectance * ray.intersection.mat->specular * shadeRay(incidentRay);
+		// col.clamp();
 	}
 
 	return col;
@@ -579,16 +615,16 @@ void scene_single_sphere(int width, int height){
 	// Defines a material for shading.
 	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
 	Colour(0.628281, 0.555802, 0.366065), 
-	51.2, 0.7 );
+	51.2, 1.0 );
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 	Colour(0.316228, 0.316228, 0.316228), 
-	12.8, 0.7 );
-	Material randomCol( Colour(.6, .1, 0), Colour(0.12, 0.89, 0.9), 
+	12.8, 1.0 );
+	Material randomCol( Colour(1, 0, 0), Colour(0.12, 0.89, 0.9), 
 	Colour(0.1, 0.9, 0.5), 
-	51.2, 0.7 );
+	51.2, 0.2 );
 	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
 	Colour(0.774597,	0.774597,	0.774597), 
-	76.8, 0.7 );
+	76.8, 0 );
 	// gold.reflective=false;
 	// jade.reflective=false;
 	// chrome.reflective=false;

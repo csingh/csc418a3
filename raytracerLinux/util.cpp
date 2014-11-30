@@ -142,6 +142,27 @@ Vector3D Vector3D::cross(const Vector3D& other) const
 			m_data[0]*other[1] - m_data[1]*other[0]);
 }
 
+Vector3D Vector3D::orthonormal_vector() {
+	// If *this vector has components (x,y,z)
+	// And we want to find orthogonal vector (a,b,c)
+	// Then a dot b = 0
+	// ie. xa + yb + zc = 0
+	// So set a = b = 1, and solve c = -(x + y)/z
+	// Then normalize (a,b,c) and we have an orthonormal vector
+	// to *this vector
+
+	Vector3D u(*this);
+	double a, b, c;
+	a = 1;
+	b = 1;
+	c = -(u[0] + u[1]) / u[2];
+
+	Vector3D v(a, b, c);
+	v.normalize();
+
+	return v;
+}
+
 Vector3D operator *(double s, const Vector3D& v)
 {
   return Vector3D(s*v[0], s*v[1], s*v[2]);

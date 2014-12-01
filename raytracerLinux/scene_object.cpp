@@ -57,7 +57,10 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	if (x >= -0.5 && x <= 0.5 && y >= -0.5 && y <= 0.5) {
 		// update if ray has no intersection, or
 		// this intersection is closer to camera
+		printf("type: %c ray: %f t: %f || ray has previous intersection? %s\n", ray.type, ray.intersection.t_value, t, 
+			ray.intersection.none ? "true": "false");
 		if (ray.intersection.none || t < ray.intersection.t_value) {
+			printf("interesected PLANE\n");
 			ray.intersection.t_value = t;
 			ray.intersection.point = modelToWorld * p;
 			normal = worldToModel.transpose() * normal;
@@ -111,6 +114,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			// two intersection points (ray passes through sphere)
 			double t1 = (-b - sqrt(delta)) / (2*a);
 			double t2 = (-b + sqrt(delta)) / (2*a);
+			
 			t = fmin(t1, t2); // pick the closer one non-negative one
 
 		}
@@ -127,6 +131,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		normal.normalize();
 
 		if (ray.intersection.none || t < ray.intersection.t_value) {
+			printf("interesected SPHERE\n");
 			ray.intersection.t_value = t;
 			ray.intersection.point = modelToWorld * p;
 			normal = worldToModel.transpose() * normal;
@@ -189,6 +194,7 @@ bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	normal.normalize();
 
 	if (ray.intersection.none || t < ray.intersection.t_value) {
+		printf("interesected CYLINDER\n");
 		ray.intersection.t_value = t;
 		ray.intersection.point = modelToWorld * p;
 		normal = worldToModel.transpose() * normal;
@@ -325,6 +331,7 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	normal.normalize();
 
 	if (ray.intersection.none || t < ray.intersection.t_value) {
+		printf("interesected CONE\n");
 		ray.intersection.t_value = t;
 		ray.intersection.point = modelToWorld * p;
 		normal = worldToModel.transpose() * normal;
@@ -366,7 +373,8 @@ bool Cone::intersectWall(Point3D o, Vector3D d, double& t, Vector3D& n){
 	bool p1_inrange = (z1 < MAX_Z && z1 >= MIN_Z);
 	bool p2_inrange = (z2 < MAX_Z && z2 >= MIN_Z);
 
-	if(t1>0  && t2 > 0 && p1_inrange && p2_inrange){
+	if(t1>0 && t2 > 0 && p1_inrange && p2_inrange){
+		printf("CONE HAS TWO ROOTS IN RANGE: %f, %f\n",t1, t2 );
 		t = fmin(t1, t2); 
 	} else if (t2 > 0 && p2_inrange) {
 		t = t2; 
@@ -376,6 +384,7 @@ bool Cone::intersectWall(Point3D o, Vector3D d, double& t, Vector3D& n){
 		return false; 
 	}
 
+	printf("cone t_value = %f\n", t);
 	p = o+t*d; 
 	n = Vector3D(2*p[0], 2*p[1], -2*p[2]);
 

@@ -164,8 +164,23 @@ void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray ) {
 	_worldToModel = node->invtrans*_worldToModel; 
 	if (node->obj) {
 		// Perform intersection.
+		// if (ray.type=='r') {
+
+		printf("--ray %c t-value %f, intersection: %s\n", ray.type, ray.intersection.t_value,
+				ray.intersection.none ? "true":"false"); 
+		// }
 		if (node->obj->intersect(ray, _worldToModel, _modelToWorld)) {
+			// if (ray.type=='r') {
+				printf("ray found closer t-value %f\n", ray.intersection.t_value); 
+			// }
 			ray.intersection.mat = node->mat;
+			
+			printf("ray udpated %f, %f, %f hit object\n", ray.dir[0], ray.dir[1], ray.dir[2]); 
+			
+		} else {
+			if (ray.type=='r') {
+				printf("ray didn't intersect anything\n");
+			}
 		}
 	}
 	// Traverse the children.
@@ -197,6 +212,8 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		p = p + (0.01 * dir);
 
 		Ray3D shadowRay(p, dir);
+
+		shadowRay.type = 's';
 
 		traverseScene(_root, shadowRay);
 
@@ -255,54 +272,83 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	computeShading(ray); 
 	col = ray.col;
 
-	// reflection code
-	if (ray.intersection.mat->reflectance > 0 && ray.num_reflections < MAX_NUM_REFLECTIONS) {
-
-		// Set up incident ray
-		Point3D p = ray.intersection.point;
-		Vector3D normal(ray.intersection.normal);
-		Vector3D dir = ray.dir - 2*( normal.dot(ray.dir) * normal );
-		dir.normalize();
-		p = p + (0.01 * dir);
-
-		Ray3D incidentRay(p, dir);
-
-		incidentRay.num_reflections = ray.num_reflections + 1;
-		col = ray.col + ray.intersection.mat->reflectance * ray.intersection.mat->specular * shadeRay(incidentRay);
-		col.clamp();
-	}
-
-	// refraction code
-	if (ray.intersection.mat->refracive_ind > 0 && ray.num_reflections < MAX_NUM_REFLECTIONS) {
-		Vector3D normal(ray.intersection.normal);
-		normal.normalize();
-		Vector3D rdir = ray.dir;
-		rdir.normalize(); 
-
-		// check if leaving or entering material by checking normal
-		double n = ray.refrac_ind/ray.intersection.mat->refracive_ind; 
-		// invert the refractance if leaving the object
-		if  (rdir.dot(normal) < 0) {
-			n = ray.intersection.mat->refracive_ind;
-		} 
-
-		// https://www.cs.unc.edu/~rademach/xroads-RT/RTarticle.html
+	if (ray.num_reflections < MAX_NUM_REFLECTIONS) {
 		
-		double c1 = -normal.dot(rdir);
-		double c2 = 1.0-pow(n,2)*(1.0-pow(c1,2)); 
-
-		if (c2 > 0.0)
-		{
-			Vector3D refractDir = (n*rdir) + (n*c1 -sqrt(c2))*normal; 
-			refractDir.normalize(); 
+		Colour reflectCol(0, 0, 0); 
+		Colour refractCol(0, 0, 0); 
+		
+		// reflection code
+		if (ray.intersection.mat->reflectance > 0 ) {
+	
+			// Set up incident ray
+			Point3D p = ray.intersection.point;
+			Vector3D normal(ray.intersection.normal);
+			Vector3D dir = ray.dir - 2*( normal.dot(ray.dir) * normal );
+			dir.normalize();
+			p = p + (0.01 * dir);
+	
+			Ray3D incidentRay(p, dir);
+			incidentRay.num_reflections = ray.num_reflections + 1;
+			incidentRay.type ='l';
 			
-			Ray3D refractRay(ray.intersection.point, refractDir);
-			
-			refractRay.num_reflections = ray.num_reflections + 1;
-			col = col + shadeRay(refractRay);
-			col.clamp();
+			reflectCol = Colour(ray.intersection.mat->reflectance * ray.intersection.mat->specular * shadeRay(incidentRay));
+			reflectCol.clamp();
 		}
+	
+		// refraction code
+		if (ray.intersection.mat->refractance > 0 ) {
+			Vector3D normal(ray.intersection.normal);
+	
+			normal.normalize();
+			printf ("-----\nray type: %c\n", ray.type); 
+			printf("ray normal REFRACT: %f, %f, %f\n", ray.intersection.normal[0], ray.intersection.normal[1], ray.intersection.normal[2]);
+		
+			Vector3D rdir = ray.dir;
+			rdir.normalize(); 
+			printf("ray dir REFRACT: %f, %f, %f\n", rdir[0], rdir[1], rdir[2]);
+	
+			// check if leaving or entering material by checking normal
+			double n1 = ray.refrac_ind;
+			double n2 = ray.intersection.mat->refracive_ind; 
+			double cosI = rdir.dot(normal); 
+			if  (cosI > 0) {
+				// ray is inside material
+				n1 = ray.intersection.mat->refracive_ind; 
+				n2 = ray.refrac_ind; 
 
+				normal = -normal; 
+				printf("ray and normal nearly opposite direction\n");
+				
+			} else {
+				// ray is outside material
+				cosI = cosI;
+				printf("ray and normal in about SAME direction\n");
+			}
+	
+			// https://www.cs.unc.edu/~rademach/xroads-RT/RTarticle.html
+			double n = n1/n2; 
+			double cosT = 1.0-pow(n,2)*(1.0-pow(cosI,2)); 
+			
+			if (cosT >= 0.0)
+			{
+
+				Vector3D refractDir = (n*rdir) + (n*cosI -sqrt(cosT))*normal; 
+				refractDir.normalize(); 
+				
+				Point3D newOrigin = ray.intersection.point  + 0.01*refractDir;
+				Ray3D refractRay(ray.intersection.point, refractDir);
+				
+				refractRay.num_reflections = ray.num_reflections + 1;
+				refractRay.type = 'r';
+				printf("FIRING REFRACT RAY: %f, %f, %f\n", refractDir[0], refractDir[1], refractDir[2]);
+	
+				refractCol= Colour(ray.intersection.mat->refractance*shadeRay(refractRay));
+				refractCol.clamp();
+			}
+
+		}
+		col = col + refractCol + reflectCol; 
+		col.clamp(); 
 	}
 	return col;
 }	
@@ -452,18 +498,18 @@ void original_scene(int width, int height) {
 	// Defines a material for shading.
 	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
 			Colour(0.628281, 0.555802, 0.366065), 
-			51.2, 1.0 , 0.0);
+			51.2, 1.0 , 0.0, 0.0);
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 			Colour(0.316228, 0.316228, 0.316228), 
-			12.8, 0.0 , 0.0);
+			12.8, 0.0 , 0.0, 0.0);
 
 	Material silver( Colour(0.2, 0.2, 0.2), Colour(0.50754, 0.50754, 0.50754),
 			Colour(0.508273, 0.508273, 0.508273), 
-			51.2, 1.0 , 0.0);
+			51.2, 1.0 , 0.0, 0.0);
 
-	Material glass( Colour(0,0,0), Colour(0.55, 0.55, 0.55), 
-			Colour(0.70, 0.70, 0.70),
-			0.25, 0.0 , 1.5); 
+	Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0), 
+			Colour(0.7, 0.7, 0.7),
+			0.25, 0.0 , 1.5, 1.0); 
 
 
 	// Defines a point light source.
@@ -471,16 +517,21 @@ void original_scene(int width, int height) {
 				Colour(0.9, 0.9, 0.9) ) );
 
 	// Add a unit square into the scene with material mat.
-
-	SceneDagNode* sphere = raytracer.addObject( new Cylinder(), &glass );
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
+	SceneDagNode* cylinder = raytracer.addObject(new Cone(), &gold);
+	// SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &glass );
+
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
 	double factor2[3] = { 6.0, 6.0, 6.0 };
 	double factor3[3] = { 2.0, 1.5, 2.0};
 
-	raytracer.translate(sphere, Vector3D(0, 0, -2));	
+	double factor4[3] = {0.5, 0.5, 2.0};
+	// raytracer.translate(sphere, Vector3D(0, 0, -2));	
+
+	raytracer.translate(cylinder, Vector3D(0, 0, -4));	
+	raytracer.scale(cylinder, Point3D(0, 0, 0), factor4);
 
 	// raytracer.rotate(sphere, 'x', -45); 
 	// raytracer.rotate(sphere, 'z', 45); 
@@ -497,14 +548,14 @@ void original_scene(int width, int height) {
 	
 	// Render the scene, feel free to make the image smaller for
 	// testing purposes.	
-	printf("Rendering image 1...");
-	raytracer.render(width, height, eye, view, up, fov, "images/view1.bmp");
+	// printf("Rendering image 1...");
+	// raytracer.render(width, height, eye, view, up, fov, "images/view1.bmp");
 	
 	// Render it from a different point of view.
 	// Point3D eye2(5, 0, 0);
 	// Vector3D view2(-5, 0, -7);
-	Point3D eye2(4, 2, 1);
-	Vector3D view2(-4, -2, -6);
+	Point3D eye2(4, -1, 0);
+	Vector3D view2(-8, 0, -5);
 	printf("Rendering image 2...");
 	raytracer.render(width, height, eye2, view2, up, fov, "images/view2.bmp");
 
@@ -523,16 +574,20 @@ void scene_part_b_cylinder_cone(int width, int height){
 	// Defines a material for shading.
 	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
 	Colour(0.628281, 0.555802, 0.366065), 
-	51.2, 1.0, 0.0);
+	51.2, 1.0, 0.0, 0.0);
 	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
 	Colour(0.316228, 0.316228, 0.316228), 
-	12.8, 1.0, 0.0);
+	12.8, 1.0, 0.0, 0.0);
 	Material randomCol( Colour(.6, .1, 0), Colour(0.12, 0.89, 0.9), 
 	Colour(0.1, 0.9, 0.5), 
-	51.2, 1.0, 0.0);
+	51.2, 1.0, 0.0, 0.0);
 	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
 	Colour(0.774597,	0.774597,	0.774597), 
-	76.8, 1.0, 0.0);
+	76.8, 1.0, 0.0, 0.0);
+
+	Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0), 
+		Colour(0.7, 0.7, 0.7),
+		0.25, 0.0 , 1.5, 1.0); 
 	// gold.reflective=false;
 	// jade.reflective=false;
 	// chrome.reflective=false;
@@ -544,8 +599,8 @@ void scene_part_b_cylinder_cone(int width, int height){
 	// raytracer.get_light_list_node()->light->set_render(ren);
 	// raytracer.get_light_list_node()->light->sample=1;
 	// Add a unit square into the scene with material mat.
-	SceneDagNode* cylinder = raytracer.addObject( new Cylinder(), &chrome );
-	SceneDagNode* cone = raytracer.addObject( new Cone(), &gold );
+	SceneDagNode* cylinder = raytracer.addObject( new Cylinder(), &glass );
+	SceneDagNode* cone = raytracer.addObject( new Cone(), &glass );
 	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &randomCol);
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );

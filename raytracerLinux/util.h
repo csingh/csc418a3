@@ -130,9 +130,9 @@ std::ostream& operator <<(std::ostream& o, const Colour& c);
 
 struct Material {
 	Material( Colour ambient, Colour diffuse, Colour specular, double exp, 
-		double reflectance, double refracive_ind) :
+		double reflectance, double refracive_ind, double refractance) :
 		ambient(ambient), diffuse(diffuse), specular(specular), specular_exp(exp), 
-		reflectance(reflectance), refracive_ind(refracive_ind) {}
+		reflectance(reflectance), refracive_ind(refracive_ind), refractance(refractance) {}
 	
 	// Ambient components for Phong shading.
 	Colour ambient; 
@@ -145,8 +145,11 @@ struct Material {
 
 	// the index of refraction of outside medium / index of refraction of material medium
 	// positive values non zero values
-	// use zero to mean opaque material
 	double refracive_ind;
+
+	// how much light this material refracts
+	// between 0 (doesn't refract) and 1 (a lot of refraction)
+	double refractance; 
 
 	// How much light this material reflects
 	// between 0 (doesn't reflect) and 1 (perfect mirror)
@@ -169,17 +172,20 @@ struct Intersection {
 	bool none;
 };
 
+
 // Ray structure. 
 struct Ray3D {
 	Ray3D() {
 		intersection.none = true; 
 		num_reflections = 0; 
 		refrac_ind = 1; 
+		type = 'n' ;
 	}
 	Ray3D( Point3D p, Vector3D v ) : origin(p), dir(v) {
 		intersection.none = true;
 		num_reflections = 0; 
 		refrac_ind = 1; 
+		type = 'n';
 	}
 	// Origin and direction of the ray.
 	Point3D origin;
@@ -193,7 +199,15 @@ struct Ray3D {
 	int num_reflections; // keep track of how many times ray has bounced
 
 	double refrac_ind; // use to keep track of refraction index of the material ray is from
+
+	// n = normal
+	// r = refract
+	// l = reflect
+	// s = shadow
+	char type; 
+
 };
+
 #endif
 
 

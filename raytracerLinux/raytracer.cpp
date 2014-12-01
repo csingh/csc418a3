@@ -321,7 +321,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 				
 			} else {
 				// ray is outside material
-				cosI = cosI;
+				cosI = - cosI;
 				printf("ray and normal in about SAME direction\n");
 			}
 	
@@ -340,6 +340,8 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 				
 				refractRay.num_reflections = ray.num_reflections + 1;
 				refractRay.type = 'r';
+
+				refractRay.refrac_ind = n1; 
 				printf("FIRING REFRACT RAY: %f, %f, %f\n", refractDir[0], refractDir[1], refractDir[2]);
 	
 				refractCol= Colour(ray.intersection.mat->refractance*shadeRay(refractRay));

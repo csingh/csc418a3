@@ -310,6 +310,8 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 			if (i > 0) {
 				col = ( 1.0 / (i*ray.intersection.mat->reflectance) ) * col;
 			}
+
+			col.clamp();
 		}
 
 		// incidentRay.num_reflections = ray.num_reflections + 1;
@@ -621,7 +623,7 @@ void scene_single_sphere(int width, int height){
 	12.8, 1.0 );
 	Material randomCol( Colour(1, 0, 0), Colour(0.12, 0.89, 0.9), 
 	Colour(0.1, 0.9, 0.5), 
-	51.2, 1.0 );
+	51.2, 0.1 );
 	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
 	Colour(0.774597,	0.774597,	0.774597), 
 	76.8, 0 );
@@ -684,8 +686,8 @@ void scene_single_sphere(int width, int height){
 	printf("Rendering image 1...");
 	raytracer.render(width, height, eye, view, up, fov, "images/cc_view1.bmp");
 	// Render it from a different point of view.
-	Point3D eye2(4, 2, 5);
-	Vector3D view2(-2, 0, -6);
-	printf("Rendering image 2...");
-	raytracer.render(width, height, eye2, view2, up, fov, "images/cc_view2.bmp");
+	// Point3D eye2(4, 2, 5);
+	// Vector3D view2(-2, 0, -6);
+	// printf("Rendering image 2...");
+	// raytracer.render(width, height, eye2, view2, up, fov, "images/cc_view2.bmp");
 }

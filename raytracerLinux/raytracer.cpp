@@ -257,7 +257,8 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	}
 
 	// Texture stuff
-	if (ray.hit_texture) {
+	// TODO: move to computeShading? Yes if we want to add lighting to textures
+	if (ray.intersection.mat->is_texture) {
 		int w = ray.intersection.mat->texture_width;
 		int h = ray.intersection.mat->texture_height;
 		double u = ray.texture_u;
@@ -268,10 +269,11 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		// printf("u, v: %f, %f\n", u, v);
 		// printf("x, y: %d, %d\n", x, y);
 		int i = (x * w) + y; // index into rbgarrays
+		// printf("i: %d\n", i);
 		double r = (1.0/256) * ray.intersection.mat->rarray[i];
 		double g = (1.0/256) * ray.intersection.mat->garray[i];
 		double b = (1.0/256) * ray.intersection.mat->barray[i];
-		printf("(r,g,b): (%f, %f, %f)\n", r, g, b);
+		// printf("(r,g,b): (%f, %f, %f)\n", r, g, b);
 		col = Colour( r, g, b );
 		return col;
 	}

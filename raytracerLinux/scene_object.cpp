@@ -216,7 +216,6 @@ bool TexturedUnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 			// printf("u,v in intersect: %f, %f\n", u, v);
 
-			ray.hit_texture = true;
 			ray.texture_u = u;
 			ray.texture_v = v;
 

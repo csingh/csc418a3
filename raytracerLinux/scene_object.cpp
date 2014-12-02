@@ -140,6 +140,74 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	return false;
 }
 
+bool TexturedUnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+		const Matrix4x4& modelToWorld ) {
+	// TODO: implement intersection code for UnitSphere, which is centred 
+	// on the origin.  
+	//
+	// Your goal here is to fill ray.intersection with correct values
+	// should an intersection occur.  This includes intersection.point, 
+	// intersection.normal, intersection.none, intersection.t_value.   
+	//
+	// HINT: Remember to first transform the ray into object space  
+	// to simplify the intersection test.
+
+	// transform ray to model space
+	Point3D o = worldToModel * ray.origin;
+	Vector3D origin(o[0], o[1], o[2]);
+	Vector3D dir = worldToModel * ray.dir;
+	dir.normalize();
+
+	// algorithm from:
+	// http://stackoverflow.com/questions/6533856/ray-sphere-intersection
+	// https://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter1.htm
+
+	double a = dir.dot(dir);
+	double b = 2 * ( dir.dot(origin) );
+	double c = origin.dot(origin) - 1;
+
+	double delta = pow(b,2) - 4*a*c;
+
+	if (delta < 0) {
+		// no intersection
+		return false;
+	} else { 
+		double t;
+		if (delta == 0) {
+			// single intersection (ray just touches the sphere)
+			double t = -b / (2*a);
+		} else {
+			// two intersection points (ray passes through sphere)
+			double t1 = (-b - sqrt(delta)) / (2*a);
+			double t2 = (-b + sqrt(delta)) / (2*a);
+			t = fmin(t1, t2); // pick the closer one non-negative one
+
+		}
+
+		if (t<= 0) {
+			return false; 
+		}
+
+		// intersection pt
+		Point3D p = o + (t * dir);
+
+		// surface normal at intersection
+		Vector3D normal(p[0], p[1], p[2]);
+		normal.normalize();
+
+		if (ray.intersection.none || t < ray.intersection.t_value) {
+			ray.intersection.t_value = t;
+			ray.intersection.point = modelToWorld * p;
+			normal = worldToModel.transpose() * normal;
+			normal.normalize();
+			ray.intersection.normal = normal;
+			ray.intersection.none = false;
+			return true;
+		}
+	}
+	
+	return false;
+}
 
 bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) { 

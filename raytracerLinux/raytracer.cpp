@@ -640,7 +640,7 @@ void scene_single_sphere(int width, int height){
 	// Add a unit square into the scene with material mat.
 	// SceneDagNode* cylinder = raytracer.addObject( new Cylinder(), &chrome );
 	// SceneDagNode* cone = raytracer.addObject( new Cone(), &gold );
-	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &randomCol);
+	SceneDagNode* sphere = raytracer.addObject( new TexturedUnitSphere(), &randomCol);
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane3 = raytracer.addObject( new UnitSquare(), &jade );

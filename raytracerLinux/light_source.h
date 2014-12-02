@@ -50,13 +50,11 @@ public:
 	_col_specular(specular) {}
 	void shade( Ray3D& ray, int shadingType );
 	Point3D get_position();
-	Vector3D get_u() const { return _u; }
-	Vector3D get_v() const { return _v; }
 private:
 	Point3D _pos;
-	Vector3D _u;
-	Vector3D _v;
 	Colour _col_ambient;
 	Colour _col_diffuse; 
 	Colour _col_specular;
+	Vector3D _u;
+	Vector3D _v;
 };

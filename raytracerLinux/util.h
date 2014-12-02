@@ -204,6 +204,7 @@ struct Ray3D {
 	// r = refract
 	// l = reflect
 	// s = shadow
+	// x = refract exit 
 	char type; 
 
 };

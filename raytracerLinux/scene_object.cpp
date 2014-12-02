@@ -277,7 +277,7 @@ bool Cylinder::intersectCap(Point3D origin, Vector3D direction, double& t, Vecto
 	// checking it intersected the min cap
 	Vector3D min_normal(0, 0, -1);
 	double t1 = (MIN_Z - origin[2])/direction[2];
-	
+
 	bool intersected = false; 
 	if (t1 > 0 ) {
 		double x1 = origin[0] + t1*direction[0]; 
@@ -385,35 +385,80 @@ bool Cone::intersectWall(Point3D o, Vector3D d, double& t, Vector3D& n){
 		return false; 
 	}
 
+	// double t1 = (-b - sqrt(delta)) / (2*a);
+	// double t2 = (-b + sqrt(delta)) / (2*a);
+
+	// if (t1 <= 0 && t2 <= 0) {
+	// 	return false; 
+	// } 
+
+	
+
+
+// find the two roots and use that to find the intersection []
 	double t1 = (-b - sqrt(delta)) / (2*a);
+	Point3D p1 = o + t1*d; 
+	bool p1_inrange = (p1[2] > MIN_Z && p1[2] < MAX_Z);
+
 	double t2 = (-b + sqrt(delta)) / (2*a);
+	Point3D p2 = o + t2*d; 
+	bool p2_inrange = (p2[2] > MIN_Z && p2[2] < MAX_Z);
 
+	// want to find the closest t-value that is also in range
 	if (t1 <= 0 && t2 <= 0) {
+		// both intersection points are behind the camera, so no intersecton 
 		return false; 
-	} 
-
-	// check the point for the two roots returned
-	double z1 = o[2]+t1*d[2];
-	double z2 = o[2]+t2*d[2]; 
-	Point3D p; 
-
-	// check if z value is in range
-	bool p1_inrange = (z1 < MAX_Z && z1 >= MIN_Z);
-	bool p2_inrange = (z2 < MAX_Z && z2 >= MIN_Z);
-
-	if(t1>0 && t2 > 0 && p1_inrange && p2_inrange){
-		printf("CONE HAS TWO ROOTS IN RANGE: %f, %f\n",t1, t2 );
-		t = fmin(t1, t2); 
+	} else if (t1 > 0 && t2 > 0) {
+		// both are in front of camera, need to check if both in range
+		if (!p1_inrange && !p2_inrange) {
+			// both points are not in range, 
+			// need to check if they intersected the caps
+			return false; 
+		}
+		else if (p1_inrange && p2_inrange) {
+			// choose closer one of the two if they are both in range
+			t = fmin(t1, t2);
+		} else {
+			// at this point only one of p1 and p2 is in range,
+			// and therefore choose the one that's in range
+			// should also check if intersect cap
+			t = p1_inrange ? t1 : t2; 
+		}
+	} else if (t1 > 0 && p1_inrange) {
+		t = t1; 
 	} else if (t2 > 0 && p2_inrange) {
 		t = t2; 
-	} else if (t1 > 0 && p1_inrange) {
-		t = t1;
 	} else {
+		// one of p1 and p2 are in front of camera, but their z value is not in range
+		// should check if they intersect the cap 
 		return false; 
 	}
 
+
+
+
+	// // check the point for the two roots returned
+	// double z1 = o[2]+t1*d[2];
+	// double z2 = o[2]+t2*d[2]; 
+	// Point3D p; 
+
+	// // check if z value is in range
+	// bool p1_inrange = (z1 < MAX_Z && z1 >= MIN_Z);
+	// bool p2_inrange = (z2 < MAX_Z && z2 >= MIN_Z);
+
+	// if(t1>0 && t2 > 0 && p1_inrange && p2_inrange){
+	// 	printf("CONE HAS TWO ROOTS IN RANGE: %f, %f\n",t1, t2 );
+	// 	t = fmin(t1, t2); 
+	// } else if (t2 > 0 && p2_inrange) {
+	// 	t = t2; 
+	// } else if (t1 > 0 && p1_inrange) {
+	// 	t = t1;
+	// } else {
+	// 	return false; 
+	// }
+
 	printf("cone t_value = %f\n", t);
-	p = o+t*d; 
+	Point3D p = o+t*d; 
 	n = Vector3D(2*p[0], 2*p[1], -2*p[2]);
 
 	return true; 

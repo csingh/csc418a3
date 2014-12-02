@@ -339,14 +339,39 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 				Point3D newOrigin = ray.intersection.point  + 0.01*refractDir;
 				Ray3D refractRay(ray.intersection.point, refractDir);
 				
-				refractRay.num_reflections = ray.num_reflections + 1;
+				// refractRay.num_reflections = ray.num_reflections + 1;
 				refractRay.type = 'r';
 
-				refractRay.refrac_ind = n1; 
-				printf("FIRING REFRACT RAY: %f, %f, %f\n", refractDir[0], refractDir[1], refractDir[2]);
+				printf("CHECKING REFRACT RAY %f, %f, %f FOR INTERSECTION\n", refractDir[0], refractDir[1], refractDir[2]);
+				
+				// get the exit point of the ray and
+				traverseScene(_root, refractRay);
+				if (!refractRay.intersection.none) {
+					//checking returned normal and refractRay direction
+					if (rdir.dot(normal) > 0) {
+						n1 = ray.intersection.mat->refracive_ind; 
+						n2 = ray.refrac_ind; 
 	
-				refractCol= Colour(ray.intersection.mat->refractance*shadeRay(refractRay));
-				refractCol.clamp();
+						normal = -refractRay.intersection.normal; 
+						printf("ray and normal in OPPOSITE direction\n");
+					}
+
+					n = n1/n2; 
+					cosT = 1.0-pow(n,2)*(1.0-pow(cosI,2)); 
+
+					Vector3D exitDir = (n*rdir) + (n*cosI -sqrt(cosT))*normal; 
+					exitDir.normalize(); 
+					
+					Point3D exitOrigin = refractRay.intersection.point  + 0.01*exitDir;
+					Ray3D exitRay(exitOrigin, exitDir);
+					
+					exitRay.num_reflections = ray.num_reflections + 1;
+					exitRay.type = 'x';
+
+					refractCol= Colour(ray.intersection.mat->refractance*shadeRay(exitRay));
+					refractCol.clamp();
+				} 
+				
 			}
 
 		}
@@ -689,7 +714,7 @@ void refraction_reflection_scene(int width, int height) {
 
 	Material glass( Colour(0.05, 0.05, 0.05), Colour(0.05, 0.05, 0.05), 
 			Colour(0.5, 0.5, 0.5),
-			12.2, 0.0 , 1.0, 1.0); 
+			12.2, 0.0 , 1.3, 1.0); 
 
 
 	// Defines a point light source.
@@ -700,7 +725,7 @@ void refraction_reflection_scene(int width, int height) {
 	SceneDagNode* sphere1 = raytracer.addObject( new UnitSphere(), &jade );
 	SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &gold );
 	SceneDagNode* plane = raytracer.addObject(new UnitSquare(), &blue);
-	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &glass );
+	SceneDagNode* sphere = raytracer.addObject( new Cylinder(), &glass );
 
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 1.0, 1.0 };

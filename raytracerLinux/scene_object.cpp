@@ -157,21 +157,21 @@ bool Cylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Vector3D dir = worldToModel * ray.dir;
 	dir.normalize();
 
+	// checking for intersection of the sides of the cylinder
+	double t_wall = std::numeric_limits<double>::max();  
+	bool intersectedWall = intersectWall(o, dir, t_wall); 
+
 	// check for cap intersection 
 	double t_cap = std::numeric_limits<double>::max();  
 	Vector3D cap_normal;
 	bool intersectedCap = intersectCap(o, dir, t_cap, cap_normal);
 
-	// checking for intersection of the sides of the cylinder
-
-	double t_wall = std::numeric_limits<double>::max();  
-	bool intersectedWall = intersectWall(o, dir, t_wall); 
 	
 	double t;
 	if (!intersectedCap && !intersectedWall) {
 		return false; 
 	} else if (intersectedWall && intersectedCap) {
-		t = fmin(t_wall, t_cap); 
+		t = fmin(t_wall, t_cap); 		
 	} else if (intersectedWall) {
 		t = t_wall;
 	} else {
@@ -215,67 +215,105 @@ bool Cylinder::intersectWall(Point3D origin, Vector3D direction, double& t) {
 
 	double d = pow(b,2) - 4*a*c;
 
-	if (d<=0) {
+	if (d<0) {
+		// then there are no intersections
 		return false; 
 	}
 
+	// find the two roots and use that to find the intersection []
 	double t1 = (-b - sqrt(d)) / (2*a);
-	double t2 = (-b + sqrt(d)) / (2*a);
-	if (t1 <= 0 && t2 <= 0) {
-		return false; 
-	} else if (t1 <= 0 && t2 > 0) {
-		t = t2; 
-	} else if (t2 <=0 && t1 > 0) {
-		t = t1; 
-	} else {
-		t = fmin(t1, t2); 
-	} 
+	Point3D p1 = origin + t1*direction; 
+	bool p1_inrange = (p1[2] > MIN_Z && p1[2] < MAX_Z);
 
-	double x = origin[0] + (t*direction[0]); 
-	double y = origin[1] + (t*direction[1]); 
-	double z = origin[2] + (t*direction[2]); 
-	if (z > MAX_Z || z < MIN_Z) {
+	double t2 = (-b + sqrt(d)) / (2*a);
+	Point3D p2 = origin + t2*direction; 
+	bool p2_inrange = (p2[2] > MIN_Z && p2[2] < MAX_Z);
+
+	// want to find the closest t-value that is also in range
+	if (t1 <= 0 && t2 <= 0) {
+		// both intersection points are behind the camera, so no intersecton 
+		return false; 
+	} else if (t1 > 0 && t2 > 0) {
+		// both are in front of camera, need to check if both in range
+		if (!p1_inrange && !p2_inrange) {
+			// both points are not in range, 
+			// need to check if they intersected the caps
+			return false; 
+		}
+		else if (p1_inrange && p2_inrange) {
+			// choose closer one of the two if they are both in range
+			t = fmin(t1, t2);
+		} else {
+			// at this point only one of p1 and p2 is in range,
+			// and therefore choose the one that's in range
+			// should also check if intersect cap
+			t = p1_inrange ? t1 : t2; 
+		}
+	} else if (t1 > 0 && p1_inrange) {
+		t = t1; 
+	} else if (t2 > 0 && p2_inrange) {
+		t = t2; 
+	} else {
+		// one of p1 and p2 are in front of camera, but their z value is not in range
+		// should check if they intersect the cap 
 		return false; 
 	}
+
+	Point3D p = origin + t*direction; 
+	Vector3D normal(p[0], p[1], 0);
+	normal.normalize(); 
+
+	// ray is parallel to sides
+	if (normal.dot(direction) == 0) {
+		return false; 
+	}
+
 	return true; 
 }
 
 bool Cylinder::intersectCap(Point3D origin, Vector3D direction, double& t, Vector3D &normal) {
 		//check for interesecting caps
 	
+	// checking it intersected the min cap
 	Vector3D min_normal(0, 0, -1);
-	Vector3D max_normal(0, 0, 1);
 	double t1 = (MIN_Z - origin[2])/direction[2];
-	double t2 = (MAX_Z - origin[2])/direction[2];
-
-	if (t1<=0 && t2 <= 0) {
-		return false; 
-	}
-
-	if (t1 <= 0 && t2 <= 0) {
-		return false; 
-	} else if (t1 <= 0 && t2 > 0) {
-		t = t2; 
-	} else if (t2 <=0 && t1 > 0) {
-		t = t1; 
-	} else if (t1 > 0 && t2 > 0) {
-		t = fmin(t1, t2); 
-	} 
-
-	double x = origin[0] + t*direction[0]; 
-	double y = origin[1] + t*direction[1]; 
-
-	if (!(x*x + y*y <= 1)) {
-		return false; 
-	}
 	
-	if (t == t1) {
-		normal = min_normal;
-	} else {
-		normal = max_normal;
+	bool intersected = false; 
+	if (t1 > 0 ) {
+		double x1 = origin[0] + t1*direction[0]; 
+		double y1 = origin[1] + t1*direction[1];
+
+		if (x1*x1+y1*y1 <= 1) {
+			normal = min_normal; 
+			intersected = true; 
+			t = t1; 
+		}
+		if (direction.dot(normal) == 0) {
+			// parallel to plane, so no intersection
+			intersected = false; 
+		}
 	}
 
-	return true; 
+	// checking if it intersect the max cap
+	Vector3D max_normal(0, 0, 1);
+	double t2 = (MAX_Z - origin[2])/direction[2];
+	// t2 should be non negative and close to the camera than t1
+	if( t2 > 0 && (t2 < t1 || !intersected)) {
+		double x2 = origin[0] + t2*direction[0]; 
+		double y2 = origin[1] + t2*direction[1];
+
+		if (x2*x2+y2*y2 <= 1) {
+			normal = max_normal; 
+			intersected = true; 
+			t = t2; 
+		}
+		if (direction.dot(normal) == 0) {
+			// parallel to plane, so no intersection
+			intersected = false; 
+		}
+	}
+
+	return intersected; 
 }
 
 bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
@@ -301,17 +339,13 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		return false; 
 	} else if (intersectedWall && intersectedCap) {
 		if (t_wall < t_cap) {
-
 			t= t_wall; 
 			normal = wall_normal; 
 		} else {
-
 			t=t_cap; 
 			normal = cap_normal; 
 		}
-		// t = fmin(t_wall, t_cap); 
 	} else if (intersectedWall) {
-
 		t = t_wall;
 		normal = wall_normal;
 	} else {
@@ -321,12 +355,6 @@ bool Cone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	// intersection pt
 	Point3D p = o + t*d;
-
-	if (t == t_wall) {
-		normal = wall_normal; 
-	} else {
-		normal = cap_normal; 
-	}
 	
 	normal.normalize();
 

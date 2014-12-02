@@ -17,6 +17,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <stdio.h>
+#include <time.h>
 
 Raytracer::Raytracer() : _lightSource(NULL) {
 	_root = new SceneDagNode();
@@ -440,9 +441,11 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	original_scene(width, height); 
+	// original_scene(width, height); 
 
 	// scene_part_b_cylinder_cone(width, height); 
+
+	refraction_reflection_scene(width, height); 
 	return 0;
 }
 
@@ -509,9 +512,9 @@ void original_scene(int width, int height) {
 			Colour(0.508273, 0.508273, 0.508273), 
 			51.2, 1.0 , 0.0, 0.0);
 
-	Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0), 
-			Colour(0.7, 0.7, 0.7),
-			0.25, 0.0 , 1.5, 1.0); 
+	Material glass( Colour(0.0, 0.0, 0.0), Colour(0.1, 0.1, 0.1), 
+			Colour(0.5, 0.5, 0.5),
+			0.25, 0.0 , 1.0, .9); 
 
 
 	// Defines a point light source.
@@ -521,8 +524,8 @@ void original_scene(int width, int height) {
 	// Add a unit square into the scene with material mat.
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
-	SceneDagNode* cylinder = raytracer.addObject(new Cone(), &gold);
-	// SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &glass );
+	SceneDagNode* cylinder = raytracer.addObject(new Cone(), &glass);
+	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &glass );
 
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
@@ -530,10 +533,11 @@ void original_scene(int width, int height) {
 	double factor3[3] = { 2.0, 1.5, 2.0};
 
 	double factor4[3] = {0.5, 0.5, 2.0};
-	// raytracer.translate(sphere, Vector3D(0, 0, -2));	
+	raytracer.translate(sphere, Vector3D(1, -0.75, -2));	
 
-	raytracer.translate(cylinder, Vector3D(0, 0, -4));	
+	raytracer.translate(cylinder, Vector3D(-1, 1, -2));	
 	raytracer.scale(cylinder, Point3D(0, 0, 0), factor4);
+	raytracer.rotate(cylinder, 'y', 180);
 
 	// raytracer.rotate(sphere, 'x', -45); 
 	// raytracer.rotate(sphere, 'z', 45); 
@@ -543,15 +547,15 @@ void original_scene(int width, int height) {
 	// raytracer.rotate(plane, 'z', 90); 
 	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
 
-	raytracer.translate(plane2, Vector3D(-2, 0, -5));	
+	raytracer.translate(plane2, Vector3D(-4, 0, -4));	
 	raytracer.rotate(plane2, 'y', 90); 
 	// raytracer.rotate(plane2, 'z', 90);
 	raytracer.scale(plane2, Point3D(0, 0, 0), factor2);
 	
 	// Render the scene, feel free to make the image smaller for
 	// testing purposes.	
-	// printf("Rendering image 1...");
-	// raytracer.render(width, height, eye, view, up, fov, "images/view1.bmp");
+	printf("Rendering image 1...");
+	raytracer.render(width, height, eye, view, up, fov, "images/view1.bmp");
 	
 	// Render it from a different point of view.
 	// Point3D eye2(5, 0, 0);
@@ -654,3 +658,78 @@ void scene_part_b_cylinder_cone(int width, int height){
 	raytracer.render(width, height, eye2, view2, up, fov, "images/cc_view2.bmp");
 }
 
+void refraction_reflection_scene(int width, int height) { 
+	// Build your scene and setup your camera here, by calling 
+	// functions from Raytracer.  The code here sets up an example
+	// scene and renders it frm two different view points, DO NOT
+	// change this if you're just implementing part one of the 
+	// assignment.  
+	Raytracer raytracer;
+
+	// Camera parameters.
+	Point3D eye(0, 0, 1);
+	Vector3D view(0, 0, -1);
+	Vector3D up(0, 1, 0);
+	double fov = 60;
+
+	// Defines a material for shading.
+	Material blue( Colour(0, 0, 0), Colour(100.0/255, 149.0/255, 237.0/255), 
+		Colour(0.31628, 0.31628, 0.31628), 
+		12.8, 0.9, 1.3, 0.0);
+	Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
+			Colour(0.628281, 0.555802, 0.366065), 
+			51.2, 1.0 , 0.0, 0.0);
+	Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
+			Colour(0.316228, 0.316228, 0.316228), 
+			12.8, 0.0 , 0.0, 0.0);
+
+	Material silver( Colour(0.2, 0.2, 0.2), Colour(0.50754, 0.50754, 0.50754),
+			Colour(0.508273, 0.508273, 0.508273), 
+			51.2, 1.0 , 0.0, 0.0);
+
+	Material glass( Colour(0.05, 0.05, 0.05), Colour(0.05, 0.05, 0.05), 
+			Colour(0.5, 0.5, 0.5),
+			12.2, 0.0 , 1.0, 1.0); 
+
+
+	// Defines a point light source.
+	raytracer.addLightSource( new PointLight(Point3D(0,0,5), 
+				Colour(0.9, 0.9, 0.9) ) );
+
+	// Add a unit square into the scene with material mat.
+	SceneDagNode* sphere1 = raytracer.addObject( new UnitSphere(), &jade );
+	SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &gold );
+	SceneDagNode* plane = raytracer.addObject(new UnitSquare(), &blue);
+	SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &glass );
+
+	// Apply some transformations to the unit square.
+	double factor1[3] = { 1.0, 1.0, 1.0 };
+	double factor2[3] = { 6.0, 6.0, 6.0 };
+	double factor3[3] = { 1.0, 1.0, 1.0 };
+
+	raytracer.translate(sphere, Vector3D(0, 0, -2.0));
+	raytracer.rotate(sphere, 'y', 180); 
+
+	raytracer.translate(sphere1, Vector3D(-1, 0, -4));	
+	raytracer.scale(sphere1, Point3D(0, 0, 0), factor3);
+
+	raytracer.translate(sphere2, Vector3D(1, 0, -4));	
+	raytracer.scale(sphere2, Point3D(0, 0, 0), factor3);
+
+
+	raytracer.translate(plane, Vector3D(0, 0, -7));
+	raytracer.rotate(plane, 'z', 45); 	
+	raytracer.scale(plane, Point3D(0, 0, 0), factor2);
+	
+	// Render the scene, feel free to make the image smaller for
+	// testing purposes.	
+	printf("Rendering image 1...");
+	raytracer.render(width, height, eye, view, up, fov, "images/rr_view1.bmp");
+	
+	// Render it from a different point of view.
+	Point3D eye2(4, 2, 1);
+	Vector3D view2(-4, -2, -6);
+	printf("Rendering image 2...");
+	raytracer.render(width, height, eye2, view2, up, fov, "images/rr_view2.bmp");
+
+}

@@ -190,22 +190,24 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		int i = 0;
 		for (i = 0; i < NUM_SHADOW_RAYS; i++) {
 			// Implement shadows here if needed.
-			Point3D p = ray.intersection.point;
-			Vector3D dir = curLight->light->get_position() - p;
-			double dist_to_light = dir.length();
+			Point3D int_point = ray.intersection.point;
+			Point3D light_p = curLight->light->get_position();
+			Vector3D dir = light_p - int_point;
+			dir.normalize();
 			// offset point slighty towards light, otherwise
 			// all rays will intersect object at t = 0
-			dir.normalize();
-			p = p + (0.01 * dir);
+			Point3D p = int_point + (0.01 * dir);
 
 			Ray3D shadowRay(p, dir);
 
 			traverseScene(_root, shadowRay);
 
 			// if intersection happened between intersection point and the light source
+			// TODO: clean up (somewhat of a mess)
 			bool do_as_normal = true;
 			if ( !shadowRay.intersection.none ) {
 				// shadow ray hit something
+				double dist_to_light = (light_p - int_point).length();
 				double dist_between_points = (shadowRay.intersection.point - ray.intersection.point).length();
 				if (dist_between_points < dist_to_light) {
 					// shadow ray hit something, and its between point and light, so light is being blocked
@@ -304,7 +306,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		Ray3D incidentRay(p, dir);
 
 		// Find vectors u,v that make a plane perpendular to incident ray
-		Vector3D u = dir.orthonormal_vector();
+		Vector3D u = get_orthonormal_vector(dir);
 		Vector3D v = dir.cross(u);
 		v.normalize();
 
@@ -321,6 +323,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 				glossy_ray_dir.normalize();
 
 				gloss_ray = Ray3D(glossy_ray_point, glossy_ray_dir);
+				// TODO: check (don't think we need this mat line)
 				gloss_ray.intersection.mat = ray.intersection.mat;
 				// computeShading(gloss_ray);
 				// col = col + gloss_ray.col;

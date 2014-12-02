@@ -48,8 +48,6 @@ public:
 	double normalize();
 	double dot(const Vector3D& other) const; 
 	Vector3D cross(const Vector3D& other) const; 
-	Vector3D orthonormal_vector();
-
 private:
 	double m_data[3];
 };
@@ -207,6 +205,4 @@ struct Ray3D {
 #endif
 
 double rand_range(double fMin, double fMax);
-
-
-
+Vector3D get_orthonormal_vector(Vector3D vector);

@@ -631,7 +631,7 @@ void scene_single_sphere(int width, int height){
 	Raytracer raytracer;
 
 	// Read bmp texture
-	char texture_filename[] = "textures/toronto.bmp";
+	char texture_filename[] = "textures/checker.bmp";
 	unsigned long int tex_w;
 	long int tex_h;
 	unsigned char *rarray, *garray, *barray;
@@ -687,7 +687,7 @@ void scene_single_sphere(int width, int height){
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 3.0, 3.0, 8.0 };
 	double factor2[3] = { 20.0, 20.0, 15.0 };
-	double factor3[3] = { 5,5,5 };
+	double factor3[3] = { 7,7,7 };
 
 	raytracer.translate(sphere, Vector3D(0, 10, -15));
 	raytracer.scale(sphere, Point3D(0,0,0), factor3);

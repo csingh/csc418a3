@@ -203,13 +203,20 @@ void Raytracer::computeShading( Ray3D& ray ) {
 			traverseScene(_root, shadowRay);
 
 			// if intersection happened between intersection point and the light source
-			if ( !shadowRay.intersection.none &&
-				 ( (shadowRay.intersection.point - ray.intersection.point).length() - dist_to_light ) ) {
-				// shadow ray hit something, so light is being blocked
-				curLight->light->shade(ray, 1);
-			} else {
+			bool do_as_normal = true;
+			if ( !shadowRay.intersection.none ) {
+				// shadow ray hit something
+				double dist_between_points = (shadowRay.intersection.point - ray.intersection.point).length();
+				if (dist_between_points < dist_to_light) {
+					// shadow ray hit something, and its between point and light, so light is being blocked
+					curLight->light->shade(ray, 1);
+					do_as_normal = false;
+				}
+			}
+
+			if (do_as_normal) {
 				// shadow ray didnt hit anything, compute pixel color as normal
-				curLight->light->shade(ray, 0);
+				curLight->light->shade(ray, 0);				
 			}
 		}
 
@@ -631,7 +638,7 @@ void scene_single_sphere(int width, int height){
 	Raytracer raytracer;
 
 	// Read bmp texture
-	char texture_filename[] = "textures/toronto.bmp";
+	char texture_filename[] = "textures/checker.bmp";
 	unsigned long int tex_w;
 	long int tex_h;
 	unsigned char *rarray, *garray, *barray;
@@ -687,7 +694,7 @@ void scene_single_sphere(int width, int height){
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 3.0, 3.0, 8.0 };
 	double factor2[3] = { 20.0, 20.0, 15.0 };
-	double factor3[3] = { 5,5,5 };
+	double factor3[3] = { 7,7,7 };
 
 	raytracer.translate(sphere, Vector3D(0, 10, -15));
 	raytracer.scale(sphere, Point3D(0,0,0), factor3);

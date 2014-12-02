@@ -133,6 +133,11 @@ struct Material {
 	Material( Colour ambient, Colour diffuse, Colour specular, double exp, double reflectance ) :
 		ambient(ambient), diffuse(diffuse), specular(specular), 
 		specular_exp(exp), reflectance(reflectance) {}
+	Material( int width, int height, unsigned char *rarray, unsigned char *garray, unsigned char *barray ) :
+		texture_width(width), texture_height(height),
+		rarray(rarray), garray(garray), barray(barray) {
+			texture_material = true;
+		}
 	
 	// Ambient components for Phong shading.
 	Colour ambient; 
@@ -150,6 +155,14 @@ struct Material {
 	// How much light this material reflects
 	// between 0 (doesn't reflect) and 1 (perfect mirror)
 	double reflectance;
+
+	// texture stuff
+	bool texture_material = false;
+	int texture_width;
+	int texture_height;
+	unsigned char *rarray;
+	unsigned char *garray;
+	unsigned char *barray;
 };
 
 struct Intersection {
@@ -172,11 +185,13 @@ struct Intersection {
 struct Ray3D {
 	Ray3D() {
 		intersection.none = true; 
-		num_reflections = 0; 
+		num_reflections = 0;
+		hit_texture = false;
 	}
 	Ray3D( Point3D p, Vector3D v ) : origin(p), dir(v) {
 		intersection.none = true;
-		num_reflections = 0; 
+		num_reflections = 0;
+		hit_texture = false; 
 	}
 	// Origin and direction of the ray.
 	Point3D origin;
@@ -188,6 +203,9 @@ struct Ray3D {
 	// function.
 	Colour col;
 	int num_reflections; // keep track of how many times ray has bounced
+	bool hit_texture; // true if ray hit object with texture
+	double texture_u; // mult by texture width to get x-index into texture
+	double texture_v; // mult by texture width to get y-index into texture
 };
 #endif
 

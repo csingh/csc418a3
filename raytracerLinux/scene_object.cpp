@@ -12,8 +12,7 @@
 #include <iostream>
 #include <limits>
 #include "scene_object.h"
-
-		#include <stdio.h>
+#include <stdio.h>
 
 bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
@@ -196,6 +195,32 @@ bool TexturedUnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		normal.normalize();
 
 		if (ray.intersection.none || t < ray.intersection.t_value) {
+			// ----- Texture specific code -----
+			// https://www.cs.unc.edu/~rademach/xroads-RT/RTarticle.html#texturemap
+			double u, v;
+			Vector3D v_n(0,1,0);
+			Vector3D v_e(1,0,0);
+			Vector3D v_p(normal);
+
+			double phi = acos( -v_n.dot(v_p) );
+
+			v = phi / M_PI;
+
+			double theta = ( acos( v_p.dot(v_e)/sin(phi) ) ) / ( 2 * M_PI);
+
+			if ( v_p.dot( v_n.cross(v_e) ) > 0 ) {
+				u = theta;
+			} else {
+				u = 1 - theta;
+			}
+
+			// printf("u,v in intersect: %f, %f\n", u, v);
+
+			ray.hit_texture = true;
+			ray.texture_u = u;
+			ray.texture_v = v;
+
+			// -------------------------------
 			ray.intersection.t_value = t;
 			ray.intersection.point = modelToWorld * p;
 			normal = worldToModel.transpose() * normal;

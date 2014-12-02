@@ -256,6 +256,26 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 		return col;
 	}
 
+	// Texture stuff
+	if (ray.hit_texture) {
+		int w = ray.intersection.mat->texture_width;
+		int h = ray.intersection.mat->texture_height;
+		double u = ray.texture_u;
+		double v = ray.texture_v;
+		int x = u * w; // x coordinate of pixel
+		int y = v * h; // y coordinate of pixel
+		// printf("w, h: %d, %d\n", w, h);
+		// printf("u, v: %f, %f\n", u, v);
+		// printf("x, y: %d, %d\n", x, y);
+		int i = (x * w) + y; // index into rbgarrays
+		double r = (1.0/256) * ray.intersection.mat->rarray[i];
+		double g = (1.0/256) * ray.intersection.mat->garray[i];
+		double b = (1.0/256) * ray.intersection.mat->barray[i];
+		printf("(r,g,b): (%f, %f, %f)\n", r, g, b);
+		col = Colour( r, g, b );
+		return col;
+	}
+
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.
 
@@ -624,8 +644,6 @@ void scene_single_sphere(int width, int height){
 		return;
 	}
 
-	printf("%d %d %d\n", rarray[width*height], garray[width*height], barray[width*height]);
-
 	// Camera parameters.
 	Point3D eye(0, 30, 1);
 	Vector3D view(0, -17, -20);
@@ -645,6 +663,7 @@ void scene_single_sphere(int width, int height){
 	Material chrome( Colour(.25, .25, .25), Colour(0.4	,0.4,	0.4), 
 	Colour(0.774597,	0.774597,	0.774597), 
 	76.8, 0 );
+	Material texture( tex_w, tex_h, rarray, garray, barray );
 	// gold.reflective=false;
 	// jade.reflective=false;
 	// chrome.reflective=false;
@@ -658,7 +677,7 @@ void scene_single_sphere(int width, int height){
 	// Add a unit square into the scene with material mat.
 	// SceneDagNode* cylinder = raytracer.addObject( new Cylinder(), &chrome );
 	// SceneDagNode* cone = raytracer.addObject( new Cone(), &gold );
-	SceneDagNode* sphere = raytracer.addObject( new TexturedUnitSphere(), &randomCol);
+	SceneDagNode* sphere = raytracer.addObject( new TexturedUnitSphere(), &texture);
 	SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &jade );
 	SceneDagNode* plane3 = raytracer.addObject( new UnitSquare(), &jade );
@@ -666,7 +685,7 @@ void scene_single_sphere(int width, int height){
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 3.0, 3.0, 8.0 };
 	double factor2[3] = { 20.0, 20.0, 15.0 };
-	double factor3[3] = { 3,3,3 };
+	double factor3[3] = { 5,5,5 };
 
 	raytracer.translate(sphere, Vector3D(0, 10, -15));
 	raytracer.scale(sphere, Point3D(0,0,0), factor3);

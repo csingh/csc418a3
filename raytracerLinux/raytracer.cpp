@@ -608,6 +608,24 @@ void scene_single_sphere(int width, int height){
 
 	Raytracer raytracer;
 
+	// Read bmp texture
+	char texture_filename[] = "textures/toronto.bmp";
+	unsigned long int tex_w;
+	long int tex_h;
+	unsigned char *rarray, *garray, *barray;
+	bool read_error = true;
+	printf("Reading texture (%s)... ", texture_filename);
+	read_error = bmp_read (texture_filename, &tex_w, &tex_h, &rarray, &garray, &barray);
+	printf("DONE.\n");
+	printf("Texture Width: %d, Height: %d\n", tex_w, tex_h);
+
+	if (read_error) {
+		printf("Texture read error, exiting...\n");
+		return;
+	}
+
+	printf("%d %d %d\n", rarray[width*height], garray[width*height], barray[width*height]);
+
 	// Camera parameters.
 	Point3D eye(0, 30, 1);
 	Vector3D view(0, -17, -20);

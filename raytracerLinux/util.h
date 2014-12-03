@@ -179,13 +179,11 @@ struct Ray3D {
 		intersection.none = true; 
 		num_reflections = 0; 
 		refrac_ind = 1; 
-		type = 'n' ;
 	}
 	Ray3D( Point3D p, Vector3D v ) : origin(p), dir(v) {
 		intersection.none = true;
 		num_reflections = 0; 
 		refrac_ind = 1; 
-		type = 'n';
 	}
 	// Origin and direction of the ray.
 	Point3D origin;
@@ -200,12 +198,6 @@ struct Ray3D {
 
 	double refrac_ind; // use to keep track of refraction index of the material ray is from
 
-	// n = normal
-	// r = refract
-	// l = reflect
-	// s = shadow
-	// x = refract exit 
-	char type; 
 
 };
 

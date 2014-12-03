@@ -165,24 +165,13 @@ void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray ) {
 	_worldToModel = node->invtrans*_worldToModel; 
 	if (node->obj) {
 		// Perform intersection.
-		// if (ray.type=='r') {
 
-		printf("--ray %c t-value %f, intersection: %s\n", ray.type, ray.intersection.t_value,
-				ray.intersection.none ? "true":"false"); 
-		// }
 		if (node->obj->intersect(ray, _worldToModel, _modelToWorld)) {
-			// if (ray.type=='r') {
-				printf("ray found closer t-value %f\n", ray.intersection.t_value); 
-			// }
+			
 			ray.intersection.mat = node->mat;
 			
-			printf("ray udpated %f, %f, %f hit object\n", ray.dir[0], ray.dir[1], ray.dir[2]); 
 			
-		} else {
-			if (ray.type=='r') {
-				printf("ray didn't intersect anything\n");
-			}
-		}
+		} 
 	}
 	// Traverse the children.
 	childPtr = node->child;
@@ -213,8 +202,6 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		p = p + (0.01 * dir);
 
 		Ray3D shadowRay(p, dir);
-
-		shadowRay.type = 's';
 
 		traverseScene(_root, shadowRay);
 
@@ -290,7 +277,7 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 	
 			Ray3D incidentRay(p, dir);
 			incidentRay.num_reflections = ray.num_reflections + 1;
-			incidentRay.type ='l';
+			
 			
 			reflectCol = Colour(ray.intersection.mat->reflectance * ray.intersection.mat->specular * shadeRay(incidentRay));
 			reflectCol.clamp();
@@ -301,12 +288,10 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 			Vector3D normal(ray.intersection.normal);
 	
 			normal.normalize();
-			printf ("-----\nray type: %c\n", ray.type); 
-			printf("ray normal REFRACT: %f, %f, %f\n", ray.intersection.normal[0], ray.intersection.normal[1], ray.intersection.normal[2]);
-		
+			
 			Vector3D rdir = ray.dir;
 			rdir.normalize(); 
-			printf("ray dir REFRACT: %f, %f, %f\n", rdir[0], rdir[1], rdir[2]);
+			
 	
 			// check if leaving or entering material by checking normal
 			double n1 = ray.refrac_ind;
@@ -318,12 +303,10 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 				n2 = ray.refrac_ind; 
 
 				normal = -normal; 
-				printf("ray and normal nearly opposite direction\n");
-				
+			
 			} else {
 				// ray is outside material
 				cosI = - cosI;
-				printf("ray and normal in about SAME direction\n");
 			}
 	
 			// https://www.cs.unc.edu/~rademach/xroads-RT/RTarticle.html
@@ -337,41 +320,11 @@ Colour Raytracer::shadeRay( Ray3D& ray ) {
 				refractDir.normalize(); 
 				
 				Point3D newOrigin = ray.intersection.point  + 0.01*refractDir;
-				Ray3D refractRay(ray.intersection.point, refractDir);
-				
-				// refractRay.num_reflections = ray.num_reflections + 1;
-				refractRay.type = 'r';
-
-				printf("CHECKING REFRACT RAY %f, %f, %f FOR INTERSECTION\n", refractDir[0], refractDir[1], refractDir[2]);
+				Ray3D refractRay(newOrigin, refractDir);
 				
 				// get the exit point of the ray and
-				traverseScene(_root, refractRay);
-				if (!refractRay.intersection.none) {
-					//checking returned normal and refractRay direction
-					if (rdir.dot(normal) > 0) {
-						n1 = ray.intersection.mat->refracive_ind; 
-						n2 = ray.refrac_ind; 
-	
-						normal = -refractRay.intersection.normal; 
-						printf("ray and normal in OPPOSITE direction\n");
-					}
-
-					n = n1/n2; 
-					cosT = 1.0-pow(n,2)*(1.0-pow(cosI,2)); 
-
-					Vector3D exitDir = (n*rdir) + (n*cosI -sqrt(cosT))*normal; 
-					exitDir.normalize(); 
-					
-					Point3D exitOrigin = refractRay.intersection.point  + 0.01*exitDir;
-					Ray3D exitRay(exitOrigin, exitDir);
-					
-					exitRay.num_reflections = ray.num_reflections + 1;
-					exitRay.type = 'x';
-
-					refractCol= Colour(ray.intersection.mat->refractance*shadeRay(exitRay));
-					refractCol.clamp();
-				} 
-				
+				refractCol= Colour(ray.intersection.mat->refractance*shadeRay(refractRay));
+				refractCol.clamp();				
 			}
 
 		}
@@ -714,7 +667,7 @@ void refraction_reflection_scene(int width, int height) {
 
 	Material glass( Colour(0.05, 0.05, 0.05), Colour(0.05, 0.05, 0.05), 
 			Colour(0.5, 0.5, 0.5),
-			12.2, 0.0 , 1.3, 1.0); 
+			12.2, 0.0 , 1.0, 1.0); 
 
 
 	// Defines a point light source.
@@ -725,7 +678,7 @@ void refraction_reflection_scene(int width, int height) {
 	SceneDagNode* sphere1 = raytracer.addObject( new UnitSphere(), &jade );
 	SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &gold );
 	SceneDagNode* plane = raytracer.addObject(new UnitSquare(), &blue);
-	SceneDagNode* sphere = raytracer.addObject( new Cylinder(), &glass );
+	SceneDagNode* sphere = raytracer.addObject( new Cone(), &glass );
 
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 1.0, 1.0 };

@@ -11,7 +11,7 @@ We implemented a ray tracer that has the following features:
 	Glossy reflections (Chandeep)
 		Instead of reflecting a single ray off the object, we define a small plane around the intersection point that is perpendicular to the surface normal at the intersection point, and shoot a bunch of rays from this plane. Then we average the resulting colours of these rays
 	Texture mapping (Chandeep)
-		Find the “latitude/longitude” of the intersection point on the UnitSphere, and convert that to pixel coordinates on the texture by following the algorithm linked in the resources below
+		Find the “latitude/longitude” of the intersection point on the UnitSphere, and convert that to pixel coordinates on the texture by following the algorithm linked in the resources below. The idea is similar to that of how a rectangular map uses lat/long to point to a point on our globe (a sphere). So this is basically the reverse process.
 	Refractions (Christy)
 		once a ray hits a material that is refractive, it calculates the direction of the ray to be fired to find where the ray exits the object
 	Area light to produce soft shadows (Chandeep)

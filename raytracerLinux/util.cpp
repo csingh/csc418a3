@@ -394,13 +394,13 @@ double rand_range(double fMin, double fMax)
 }
 
 Vector3D get_orthonormal_vector(Vector3D vector) {
-	// If *this vector has components (x,y,z)
+	// This vector has components (x,y,z)
 	// And we want to find orthogonal vector (a,b,c)
 	// Then a dot b = 0
 	// ie. xa + yb + zc = 0
 	// So set a = b = 1, and solve c = -(x + y)/z
 	// Then normalize (a,b,c) and we have an orthonormal vector
-	// to *this vector
+	// to this vector
 
 	Vector3D u(vector);
 	double a, b, c;

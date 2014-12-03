@@ -2,8 +2,8 @@
 Assignment 3 Checklist/Grading sheet
 -------------------------------------
 
-Name: 
-Student ID:
+Name: Chandeep Singh, Christy Sham
+Student ID: 997682208, 994514860
 
 -----------------------------------------------------------------------------------------
 A. PLEASE ANSWER THE FOLLOWING QUESTIONS (your assignment will not be graded otherwise!)
@@ -13,14 +13,14 @@ A. PLEASE ANSWER THE FOLLOWING QUESTIONS (your assignment will not be graded oth
    Academic Honesty policy stated in 
    http://www.cs.toronto.edu/~kyros/courses/418/policy.2010f.html
 
-   ___Yes   ___No
+   _X_Yes   ___No
 
 
 2. I collaborated on this assignment with another student 
    (see http://www.cs.toronto.edu/~kyros/courses/418/policy.2010f.html for
     policy on assignments done in collaboration)
 
-   ___Yes   ___No
+   ___Yes   _X_No
 
    If you checked yes, please supply the following
 
@@ -39,16 +39,16 @@ B. PLACE AN (X) IN FRONT OF PORTIONS OF THE ASSIGNMENT THAT YOU COMPLETED IN FUL
    WE WILL BE ABLE TO MAKE AN ACCURATE ASSESSMENT
 
    
-___   (10 points) Part 1a     Ray casting
+_X_   (10 points) Part 1a     Ray casting
                   
-___   (20 points) Part 1b     Ray-sphere intersection
+_X_   (20 points) Part 1b     Ray-sphere intersection
 
-___   (15 points) Part 1c     Ray-square intersection
+_X_   (15 points) Part 1c     Ray-square intersection
 
-___   (15 points) Part 1d     Phong shading (ambient, diffuse, and specular components)
+_X_   (15 points) Part 1d     Phong shading (ambient, diffuse, and specular components)
                   
-___   ( 5 points) Part 1e     Coding style
+_X_   ( 5 points) Part 1e     Coding style
 
-___   (10 points) Part 1f     Written report
+_X_   (10 points) Part 1f     Written report
 
 -------------------------------------------------------------------------------- 

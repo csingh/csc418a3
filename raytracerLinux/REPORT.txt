@@ -1,0 +1,39 @@
+We implemented a ray tracer that has the following features:
+    Ray casting (Chandeep)
+    Intersection code for Spheres, Squares (Chandeep)
+		Got help from links below
+    Point light source with Phong shading (Christy)
+		calculated the ambient, diffuse and specular for the pixel based on the material's properties
+	Anti-aliasing (Christy)
+		used stratified sampling to calculate the average intensity for a pixel  
+	Cylinders and Cones (Christy)
+		checked intersection with the infinite cylinder and cone along the z axis then check for intersection with the end caps
+	Glossy reflections (Chandeep)
+		Instead of reflecting a single ray off the object, we define a small plane around the intersection point that is perpendicular to the surface normal at the intersection point, and shoot a bunch of rays from this plane. Then we average the resulting colours of these rays
+	Texture mapping (Chandeep)
+		Find the “latitude/longitude” of the intersection point on the UnitSphere, and convert that to pixel coordinates on the texture by following the algorithm linked in the resources below
+	Refractions (Christy)
+		once a ray hits a material that is refractive, it calculates the direction of the ray to be fired to find where the ray exits the object
+	Area light to produce soft shadows (Chandeep)
+		Instead of casting a ray from a point light source to an object to see if the object is blocked (thus creating a shadow), we extend the light source to an Area light source which is defined as a plane, and return a random point on the plane in order to do the same calculation as before. We can do this many times for a single point on an object (and many random points on the Area Light plane), and then average the results together to get soft shadows.
+
+The program is in the same structure as we started, with raytracer containing all the methods that handles all the ray spawning; Reflections, refractions, anti-aliasing, and ray casting code lives here. Light_source contains the shading functions for the different lights and scene_object contain the intersection methods for all the different primitive shapes.  
+
+We added a progress bar to show the rendering process (https://www.ross.click/2011/02/creating-a-progress-bar-in-c-or-any-other-console-app/)
+
+Apart from lecture notes, we've consulted some sources from the internet, and the links are mentioned in comments in the code, but the following is a list of some resources we’ve consulted. 
+
+For UnitSquare intersection:
+	https://csc.cdf.toronto.edu/mybb/showthread.php?tid=8668
+For Sphere intersection:
+	http://stackoverflow.com/questions/6533856/ray-sphere-intersection
+	https://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter1.htm
+For Cylinder and Cone intersections:
+	https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html
+For Refractions:
+	https://www.cs.unc.edu/~rademach/xroads-RT/RTarticle.html
+	http://ray-tracer-concept.blogspot.ca/2011/12/refraction.html
+For Texture Mapping:
+	https://www.cs.unc.edu/~rademach/xroads-RT/RTarticle.html#texturemap
+
+(there may be a few more links in code comments)

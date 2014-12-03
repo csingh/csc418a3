@@ -48,7 +48,6 @@ public:
 	double normalize();
 	double dot(const Vector3D& other) const; 
 	Vector3D cross(const Vector3D& other) const; 
-
 private:
 	double m_data[3];
 };
@@ -129,9 +128,16 @@ Colour operator +(const Colour& u, const Colour& v);
 std::ostream& operator <<(std::ostream& o, const Colour& c); 
 
 struct Material {
-	Material( Colour ambient, Colour diffuse, Colour specular, double exp, double reflectance ) :
+	Material( Colour ambient, Colour diffuse, Colour specular, double exp,
+		double reflectance, double refracive_ind, double refractance) :
 		ambient(ambient), diffuse(diffuse), specular(specular), 
-		specular_exp(exp), reflectance(reflectance) {}
+		specular_exp(exp),
+		reflectance(reflectance), refracive_ind(refracive_ind), refractance(refractance) {}
+	Material( int width, int height, unsigned char *rarray, unsigned char *garray, unsigned char *barray ) :
+		texture_width(width), texture_height(height),
+		rarray(rarray), garray(garray), barray(barray) {
+			is_texture = true;
+		}
 	
 	// Ambient components for Phong shading.
 	Colour ambient; 
@@ -149,6 +155,22 @@ struct Material {
 	// How much light this material reflects
 	// between 0 (doesn't reflect) and 1 (perfect mirror)
 	double reflectance;
+
+	// the index of refraction of outside medium / index of refraction of material medium
+	// positive values non zero values
+	double refracive_ind;
+
+	// how much light this material refracts
+	// between 0 (doesn't refract) and 1 (a lot of refraction)
+	double refractance; 
+
+	// texture stuff
+	bool is_texture = false;
+	int texture_width;
+	int texture_height;
+	unsigned char *rarray;
+	unsigned char *garray;
+	unsigned char *barray;
 };
 
 struct Intersection {
@@ -171,11 +193,13 @@ struct Intersection {
 struct Ray3D {
 	Ray3D() {
 		intersection.none = true; 
-		num_reflections = 0; 
+		num_reflections = 0;
+		refrac_ind = 1; 
 	}
 	Ray3D( Point3D p, Vector3D v ) : origin(p), dir(v) {
 		intersection.none = true;
-		num_reflections = 0; 
+		num_reflections = 0;
+		refrac_ind = 1; 
 	}
 	// Origin and direction of the ray.
 	Point3D origin;
@@ -187,10 +211,12 @@ struct Ray3D {
 	// function.
 	Colour col;
 	int num_reflections; // keep track of how many times ray has bounced
+	double texture_u; // mult by texture width to get x-index into texture
+	double texture_v; // mult by texture width to get y-index into texture
+
+	double refrac_ind; // use to keep track of refraction index of the material ray is from
 };
 #endif
 
-
-
-
-
+double rand_range(double fMin, double fMax);
+Vector3D get_orthonormal_vector(Vector3D vector);

@@ -387,5 +387,29 @@ std::ostream& operator <<(std::ostream& os, const Matrix4x4& M) {
 		<< M[3][2] << " " << M[3][3] << "]";
 }
 
+double rand_range(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
 
+Vector3D get_orthonormal_vector(Vector3D vector) {
+	// This vector has components (x,y,z)
+	// And we want to find orthogonal vector (a,b,c)
+	// Then a dot b = 0
+	// ie. xa + yb + zc = 0
+	// So set a = b = 1, and solve c = -(x + y)/z
+	// Then normalize (a,b,c) and we have an orthonormal vector
+	// to this vector
 
+	Vector3D u(vector);
+	double a, b, c;
+	a = 1;
+	b = 1;
+	c = -(u[0] + u[1]) / u[2];
+
+	Vector3D v(a, b, c);
+	v.normalize();
+
+	return v;
+}

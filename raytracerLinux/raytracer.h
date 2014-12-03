@@ -15,7 +15,11 @@
 #include "scene_object.h"
 #include "light_source.h"
 
-int MAX_NUM_REFLECTIONS = 1;
+int NUM_AA_SAMPLES = 1; // NUM_AA_SAMPLES^2 samples per pixel
+int NUM_REFLECTION_RAYS = 1; // Number of bounces for a ray
+int NUM_SHADOW_RAYS = 3; // Number of shadow rays (more = less jittery shadows)
+int NUM_GLOSSY_REFLECTION_RAYS = 10; // (more = less jittery glossy reflections)
+double GLOSS_AMOUNT = 0.5; // higher number means more blurry reflections, but also more jittery
 
 // Linked list containing light sources in the scene.
 struct LightListNode {
@@ -154,3 +158,5 @@ private:
 static inline void loadBar(int x, int n, int r, int w, bool firstCall);
 void scene_part_b_cylinder_cone(int width, int height);
 void original_scene(int width, int height); 
+void scene_single_textured_sphere(int width, int height); 
+void refraction_reflection_scene(int width, int height);
